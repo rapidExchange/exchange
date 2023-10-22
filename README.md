@@ -4,8 +4,6 @@
 
 Документация по fiber: https://docs.gofiber.io
 
-Документация по protobuf: https://protobuf.dev
-
 ### Кодогенерация REST API
 
 Стандарт OpenAPI: https://swagger.io/specification/
