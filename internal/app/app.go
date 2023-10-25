@@ -3,8 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
+	"log"
 	"rapidEx/config"
+	"rapidEx/internal/controllers"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 )
@@ -41,4 +44,12 @@ func (a *app) setRedisConn() error {
 	a.redisClient = redis.NewClient(opt)
 
 	return nil
-} 
+}
+
+func (a *app) ListenAndServe() {
+	fiberApp := fiber.New()
+
+	controllers.RegisterRoutes(fiberApp)
+
+	log.Fatal(fiberApp.Listen(":8080"))
+}

@@ -24,9 +24,7 @@ func register(c *fiber.Ctx) error {
 	return c.SendString("Register route")
 }
 
-func RegisterRoutes() {
-	app := fiber.New()
-
+func RegisterRoutes(app *fiber.App) {
 	app.Post("/register", register)
 	app.Post("/login", login)
 	app.Get("/stocks/:pair", stocks)
