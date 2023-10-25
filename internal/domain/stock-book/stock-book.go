@@ -1,13 +1,13 @@
 package stockBook
 
 type StockBook struct {
-	buy *map[string]int64
-	sell *map[string]int64
+	buy *map[float64]float64
+	sell *map[float64]float64
 }
 
 func New() *StockBook {
-	buy := make(map[string]int64)
-	sell := make(map[string]int64)
+	buy := make(map[float64]float64)
+	sell := make(map[float64]float64)
 	return &StockBook{
 		buy: &buy,
 		sell: &sell,
