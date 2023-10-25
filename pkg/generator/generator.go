@@ -6,7 +6,6 @@ import (
 )
 
 type Generator struct {
-
 }
 
 func New() *Generator {
