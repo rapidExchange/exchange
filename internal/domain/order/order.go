@@ -1,13 +1,13 @@
 package order
 
 type Order struct {
-	stockName	string
+	ticker	string
 	quantity	float64
 	price	float64
 }
 
-func New(stockName string, quantity, price float64) Order {
-	return Order{stockName: stockName,
+func New(ticker string, quantity, price float64) Order {
+	return Order{ticker: ticker,
 		quantity: quantity,
 		price: price,}
 }
