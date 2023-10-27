@@ -1,6 +1,9 @@
 package stockPriceProcessor
 
-import "math"
+import (
+	"math"
+	stockBook "rapidEx/internal/domain/stock-book"
+)
 
 type stockPriceProcessor struct {
 }
@@ -9,7 +12,7 @@ func New() *stockPriceProcessor {
 	return &stockPriceProcessor{}
 }
 
-func (proc *stockPriceProcessor) UpdPrice(book map[float64]float64) float64 { // returns the meanweight price
+func (proc *stockPriceProcessor) MeanWeight(book map[float64]float64) float64 { // returns the meanweight price
 	priWeight, suquant := 0.0, 0.0
 	for pri, quant := range book {
 		priWeight += pri * quant
@@ -34,4 +37,17 @@ func (proc *stockPriceProcessor) PreciseAs(part float64) int { // returns the nu
 		}
 	}
 	return k
+}
+
+func (proc *stockPriceProcessor) UpdPrice(stb *stockBook.StockBook, quantmin uint64) float64 { // returns a rounded actual price
+	comb := make(map[float64]float64)
+	for k, v := range *stb.Buy {
+		comb[k] = v
+	}
+	for k, v := range *stb.Sell {
+		comb[k] = v
+	}
+	newprice := proc.MeanWeight(comb)
+	minval := 1 / float64(quantmin)
+	return proc.Round(newprice, proc.PreciseAs(minval))
 }
