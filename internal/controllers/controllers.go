@@ -7,19 +7,20 @@ import (
 	"encoding/json"
 
 	"github.com/gofiber/fiber/v2"
+
 )
 
 //TODO: normal error handling
 
-type getTickerPriceRequest struct {
-	Symbol string `json:"symbol"`
+type getTickerPriceBinanceRequest struct {
+	firstSymbol string `json:"first_symbol"`
+	secondSymbol string `json:"second_symbol"`
 }
 
 type getTickerPriceBinanceResponse struct {
 	Symbol string `json:"symbol"`
 	Price string `json:"price"`
 }
-
 func home(c *fiber.Ctx) error {
 	return c.SendString("Start page")
 }
@@ -32,44 +33,25 @@ func stockPair(c *fiber.Ctx) error {
 	return c.SendString("Pair of stocks trade page")
 }
 
-func panel(c *fiber.Ctx) error {
-	return c.SendString("Admin panel")
-}
-
 func getTickerPrice(c *fiber.Ctx) error {
-	getPrice := new(getTickerPriceRequest)
+	getPriceRequest := new(getTickerPriceBinanceRequest)
 
-	if err := c.BodyParser(getPrice); err != nil {
+	if err := c.BodyParser(getPriceRequest); err != nil {
 		return err
 	}
 
-	url := "https://api.binance.com/api/v3/ticker/price?symbol=" + strings.ToUpper(strings.TrimSpace(getPrice.Symbol))
+	symbol := strings.ToUpper(strings.TrimSpace(getPriceRequest.firstSymbol) +
+	strings.TrimSpace(getPriceRequest.secondSymbol))
 
-	req, err := http.NewRequest("GET", url, nil)
+	//TODO: conitnu adding a pair
+	price, err := getBinancePrice(symbol)
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
 
-	priceResp, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	var binanceResp getTickerPriceBinanceResponse
-
-	err = json.Unmarshal(priceResp, &binanceResp)
-	if err != nil {
-		return err
-	}
-
-	return c.SendString(binanceResp.Price)
+	return c.SendStatus(fiber.StatusOK)
 }
 
 func login(c *fiber.Ctx) error {
@@ -85,7 +67,35 @@ func RegisterRoutes(app *fiber.App) {
 	app.Post("/login", login)
 	app.Get("/stocks/:pair", stocks)
 	app.Get("/stocks", stockPair)
-	app.Get("/panel", panel)
 	app.Post("/price", getTickerPrice)
 	app.Get("/", home)
 }
+
+func getBinancePrice(symbol string) (string, error) {
+	url := "https://api.binance.com/api/v3/ticker/price?symbol=" + symbol
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	priceResp, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var binanceResp getTickerPriceBinanceResponse
+
+	err = json.Unmarshal(priceResp, &binanceResp)
+	if err != nil {
+		return "", err
+	}
+	return binanceResp.Price, nil
+} 
