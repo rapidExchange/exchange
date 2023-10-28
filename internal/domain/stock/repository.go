@@ -17,7 +17,7 @@ type rsClient struct {
 }
 
 func (r *rsClient) Set(ctx context.Context, stock Stock) error {
-	status := r.rc.Set(ctx, stock.ticker, stock, 1)
+	status := r.rc.Set(ctx, stock.Ticker, stock, 1)
 	if status.Err() != nil {
 		return status.Err()
 	}

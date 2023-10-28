@@ -3,15 +3,15 @@ package stock
 import "rapidEx/internal/domain/stock-book"
 
 type Stock struct{
-	ticker string
-	price	float64
-	stockbook *stockBook.StockBook
+	Ticker string
+	Price	float64
+	Stockbook stockBook.StockBook
 }
 
-func New(ticker string, price float64, stockBook *stockBook.StockBook) *Stock{
+func New(ticker string, price float64, stockBook stockBook.StockBook) *Stock{
 	return &Stock{
-		ticker: ticker,
-		price: price,
-		stockbook: stockBook,
+		Ticker: ticker,
+		Price: price,
+		Stockbook: stockBook,
 	}
 } 

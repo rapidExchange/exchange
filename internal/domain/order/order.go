@@ -1,13 +1,13 @@
 package order
 
 type Order struct {
-	ticker	string
-	quantity	float64
-	price	float64
+	Ticker	string
+	Quantity	float64
+	Price	float64
 }
 
 func New(ticker string, quantity, price float64) Order {
-	return Order{ticker: ticker,
-		quantity: quantity,
-		price: price,}
+	return Order{Ticker: ticker,
+		Quantity: quantity,
+		Price: price,}
 }
