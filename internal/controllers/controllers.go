@@ -13,8 +13,8 @@ import (
 //TODO: normal error handling
 
 type getTickerPriceBinanceRequest struct {
-	firstSymbol string `json:"first_symbol"`
-	secondSymbol string `json:"second_symbol"`
+	FirstSymbol string `json:"first_symbol"`
+	SecondSymbol string `json:"second_symbol"`
 }
 
 type getTickerPriceBinanceResponse struct {
@@ -40,8 +40,8 @@ func getTickerPrice(c *fiber.Ctx) error {
 		return err
 	}
 
-	symbol := strings.ToUpper(strings.TrimSpace(getPriceRequest.firstSymbol) +
-	strings.TrimSpace(getPriceRequest.secondSymbol))
+	symbol := strings.ToUpper(strings.TrimSpace(getPriceRequest.FirstSymbol) +
+	strings.TrimSpace(getPriceRequest.SecondSymbol))
 
 	//TODO: conitnu adding a pair
 	price, err := getBinancePrice(symbol)
