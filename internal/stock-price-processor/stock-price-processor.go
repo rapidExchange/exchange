@@ -41,10 +41,10 @@ func (proc *stockPriceProcessor) PreciseAs(part float64) int { // returns the nu
 
 func (proc *stockPriceProcessor) UpdPrice(stb *stockBook.StockBook, quantmin uint64) float64 { // returns a rounded actual price
 	comb := make(map[float64]float64)
-	for k, v := range *stb.Buy {
+	for k, v := range stb.Buy {
 		comb[k] = v
 	}
-	for k, v := range *stb.Sell {
+	for k, v := range stb.Sell {
 		comb[k] = v
 	}
 	newprice := proc.MeanWeight(comb)
