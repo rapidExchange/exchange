@@ -8,10 +8,10 @@ type Stock struct{
 	Stockbook stockBook.StockBook
 }
 
-func New(ticker string, price float64, stockBook stockBook.StockBook) *Stock{
+func New(ticker string, price float64) *Stock{
 	return &Stock{
 		Ticker: ticker,
 		Price: price,
-		Stockbook: stockBook,
+		Stockbook: *stockBook.New(),
 	}
 } 
