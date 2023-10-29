@@ -45,7 +45,6 @@ func addStock(c *fiber.Ctx) error {
 	symbol := strings.ToUpper(strings.TrimSpace(getPriceRequest.FirstSymbol) +
 	strings.TrimSpace(getPriceRequest.SecondSymbol))
 
-	//TODO: continue adding a pair
 	priceString, err := getBinancePrice(symbol)
 	if err != nil {
 		return err
@@ -59,6 +58,8 @@ func addStock(c *fiber.Ctx) error {
 	ticker := getPriceRequest.FirstSymbol + "/" + getPriceRequest.SecondSymbol
 
 	stock_usecases.AddStock(ticker, price)
+
+	c.Append("Stocks", ticker)
 
 	return c.SendStatus(fiber.StatusOK)
 }
