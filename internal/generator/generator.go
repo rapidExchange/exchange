@@ -25,8 +25,8 @@ func (g Generator) generate(cPrice float64) (volume float64, price float64) {
 func (g Generator) OrderGenerate(s *stock.Stock) order.Order {
 	volume, price := g.generate(s.Price)
 	stockProcessor := stockPriceProcessor.New()
-	prec := stockProcessor.PreciseAs(price)
-	price = stockPriceProcessor.New().Round(price, prec)
+	// prec := stockProcessor.PreciseAs(price)
+	price = stockProcessor.Round(price, 10000)
 
 	ord := order.Order{Ticker: s.Ticker, Quantity: volume, Price: price}
 
