@@ -1,13 +1,15 @@
 package controllers
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
-	"encoding/json"
 
 	"github.com/gofiber/fiber/v2"
 
+	"rapidEx/internal/usecases/stock_usecases"
 )
 
 //TODO: normal error handling
@@ -33,7 +35,7 @@ func stockPair(c *fiber.Ctx) error {
 	return c.SendString("Pair of stocks trade page")
 }
 
-func getTickerPrice(c *fiber.Ctx) error {
+func addStock(c *fiber.Ctx) error {
 	getPriceRequest := new(getTickerPriceBinanceRequest)
 
 	if err := c.BodyParser(getPriceRequest); err != nil {
@@ -43,13 +45,20 @@ func getTickerPrice(c *fiber.Ctx) error {
 	symbol := strings.ToUpper(strings.TrimSpace(getPriceRequest.FirstSymbol) +
 	strings.TrimSpace(getPriceRequest.SecondSymbol))
 
-	//TODO: conitnu adding a pair
-	price, err := getBinancePrice(symbol)
+	//TODO: continue adding a pair
+	priceString, err := getBinancePrice(symbol)
 	if err != nil {
 		return err
 	}
 
+	price, err := strconv.ParseFloat(priceString, 64)
+	if err != nil {
+		return err
+	}
 
+	ticker := getPriceRequest.FirstSymbol + "/" + getPriceRequest.SecondSymbol
+
+	stock_usecases.AddStock(ticker, price)
 
 	return c.SendStatus(fiber.StatusOK)
 }
@@ -67,7 +76,7 @@ func RegisterRoutes(app *fiber.App) {
 	app.Post("/login", login)
 	app.Get("/stocks/:pair", stocks)
 	app.Get("/stocks", stockPair)
-	app.Post("/price", getTickerPrice)
+	app.Post("/price", addStock)
 	app.Get("/", home)
 }
 
