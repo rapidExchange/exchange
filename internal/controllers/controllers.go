@@ -57,7 +57,7 @@ func addStock(c *fiber.Ctx) error {
 
 	ticker := getPriceRequest.FirstSymbol + "/" + getPriceRequest.SecondSymbol
 
-	stock_usecases.AddStock(ticker, price)
+	stock_usecases.SetStock(ticker, price)
 
 	c.Append("Stocks", ticker)
 

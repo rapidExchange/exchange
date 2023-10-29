@@ -11,7 +11,7 @@ import (
 )
 
 //TODO: remove dependence from stock repository
-func AddStock(ticker string, price float64) error {
+func SetStock(ticker string, price float64) error {
 	s := stock.New(ticker, price)
 
 	rc, err := setRedisConn()
@@ -28,6 +28,23 @@ func AddStock(ticker string, price float64) error {
 		return err
 	}
 	return nil
+}
+
+func GetStock(ticker string) (*stock.Stock, error) {
+	rc, err := setRedisConn()
+	if err != nil {
+		return nil, err
+	}
+
+	stockRepo := stock.NewRepository(rc)
+
+	var ctx context.Context
+	stock, err := stockRepo.Get(ctx, ticker)
+	if err != nil {
+		return nil, err
+	}
+
+	return stock, nil
 }
 
 func setRedisConn() (*redis.Client, error) {
