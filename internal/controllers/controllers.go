@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"rapidEx/internal/test_case"
 	"rapidEx/internal/usecases/stock_usecases"
 )
 
@@ -36,9 +37,10 @@ func stockPair(c *fiber.Ctx) error {
 }
 
 func addStock(c *fiber.Ctx) error {
+	go case1.Case()
 	getPriceRequest := new(getTickerPriceBinanceRequest)
 
-	if err := c.BodyParser(getPriceRequest); err != nil {
+	if err := c.BodyParser(&getPriceRequest); err != nil {
 		return err
 	}
 
@@ -57,9 +59,10 @@ func addStock(c *fiber.Ctx) error {
 
 	ticker := getPriceRequest.FirstSymbol + "/" + getPriceRequest.SecondSymbol
 
-	stock_usecases.SetStock(ticker, price)
-
-	c.Append("Stocks", ticker)
+	err = stock_usecases.SetStock(ticker, price)
+	if err != nil {
+		return err
+	}
 
 	return c.SendStatus(fiber.StatusOK)
 }
