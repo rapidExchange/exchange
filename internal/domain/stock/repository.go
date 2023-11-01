@@ -2,8 +2,42 @@ package stock
 
 import (
 	"context"
+	"encoding/json"
+	"time"
+	"errors"
+
 	"github.com/redis/go-redis/v9"
+
+	"rapidEx/internal/utils"
 )
+
+type StockMapString struct {
+	Ticker string
+	Price float64
+	Buy map[string]string
+	Sell map[string]string
+}
+
+func NewStockMapString(s Stock) *StockMapString {
+	var sMap StockMapString
+	sMap.Ticker = s.Ticker
+	sMap.Price = s.Price
+	sMap.Buy = utils.MapFloatToString(s.Stockbook.Buy)
+	sMap.Sell = utils.MapFloatToString(s.Stockbook.Sell)
+	return &sMap
+}
+
+func (s StockMapString)MarshalBinary() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+
+func UnmarshalBinary(data []byte) (*StockMapString, error) {
+	var s StockMapString
+	err := json.Unmarshal(data, &s)
+	return &s, err
+}
+//TODO: handle errors
 
 type Repository interface {
 	Set(ctx context.Context, stock Stock) error
@@ -17,27 +51,49 @@ type rsClient struct {
 }
 
 func (r *rsClient) Set(ctx context.Context, stock Stock) error {
-	status := r.rc.Set(ctx, stock.Ticker, stock, 1)
+	stockMapString := NewStockMapString(stock)
+	status := r.rc.Set(ctx, stock.Ticker, stockMapString, time.Second * 1000)
 	if status.Err() != nil {
 		return status.Err()
 	}
-
 	return nil
 }
 
 func (r *rsClient) Get(ctx context.Context, ticker string) (*Stock, error) {
-	rStock := r.rc.Get(ctx, ticker)
-	if rStock.Err() != nil {
-		return nil, rStock.Err()
+	rStockMapString := r.rc.Get(ctx, ticker)
+	switch {
+	case rStockMapString.Err() == redis.Nil:
+		return nil, errors.New("Stock not found")
+	case rStockMapString.Err() != nil:
+		return nil, rStockMapString.Err()
 	}
 
-	s := Stock{}
+	var s Stock
 
-	err := rStock.Scan(&s)
+	sStockWrap, err := rStockMapString.Result()
 	if err != nil {
 		return nil, err
 	}
 
+	stockMapString, err := UnmarshalBinary([]byte(sStockWrap))
+	if err != nil {
+		return nil, err
+	}
+
+	mBuy, err:= utils.MapStringToFloat(stockMapString.Buy)
+	if err != nil {
+		return nil, err
+	}
+
+	mSell, err := utils.MapStringToFloat(stockMapString.Sell)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Ticker = stockMapString.Ticker
+	s.Price = stockMapString.Price
+	s.Stockbook.Buy = mBuy
+	s.Stockbook.Sell = mSell
 	return &s, nil
 }
 
