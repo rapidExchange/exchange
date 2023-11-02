@@ -11,8 +11,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-//TODO: remove dependence from stock repository
-//TODO: refactor setstock(without new stock object)
 func SetStock(ticker string, price float64) error {
 	s := stock.New(ticker, price)
 
@@ -48,7 +46,6 @@ func GetStock(ticker string) (*stock.Stock, error) {
 	}
 	return stock, nil
 }
-
 func setRedisConn() (*redis.Client, error) {
 	pwd, err := os.Getwd()
 	if err != nil {

@@ -80,7 +80,7 @@ func RegisterRoutes(app *fiber.App) {
 	app.Post("/login", login)
 	app.Get("/stocks/:pair", stocks)
 	app.Get("/stocks", stockPair)
-	app.Post("/price", addStock)
+	app.Post("/add-stock", addStock)
 	app.Get("/", home)
 }
 

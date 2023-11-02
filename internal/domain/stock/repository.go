@@ -11,15 +11,15 @@ import (
 	"rapidEx/internal/utils"
 )
 
-type StockMapString struct {
+type StockModify struct {
 	Ticker string
 	Price float64
 	Buy map[string]string
 	Sell map[string]string
 }
 
-func NewStockMapString(s Stock) *StockMapString {
-	var sMap StockMapString
+func NewStockMapString(s Stock) *StockModify {
+	var sMap StockModify
 	sMap.Ticker = s.Ticker
 	sMap.Price = s.Price
 	sMap.Buy = utils.MapFloatToString(s.Stockbook.Buy)
@@ -27,13 +27,13 @@ func NewStockMapString(s Stock) *StockMapString {
 	return &sMap
 }
 
-func (s StockMapString)MarshalBinary() ([]byte, error) {
+func (s StockModify)MarshalBinary() ([]byte, error) {
 	return json.Marshal(s)
 }
 
 
-func UnmarshalBinary(data []byte) (*StockMapString, error) {
-	var s StockMapString
+func UnmarshalBinary(data []byte) (*StockModify, error) {
+	var s StockModify
 	err := json.Unmarshal(data, &s)
 	return &s, err
 }
