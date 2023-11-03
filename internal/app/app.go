@@ -7,9 +7,13 @@ import (
 	"os"
 	"rapidEx/config"
 	"rapidEx/internal/controllers"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
+
+	"rapidEx/internal/generator"
+	"rapidEx/internal/stock-price-processor"
 )
 
 type app struct {
@@ -45,6 +49,18 @@ func (a *app) setRedisConn() error {
 	a.redisClient = redis.NewClient(opt)
 
 	return nil
+}
+
+func (a *app) Do() {
+	go func() {
+		gen := generator.New()
+		sProcessor := stockPriceProcessor.New()
+		for {
+			time.Sleep(time.Second * 1)
+			gen.GenerateForAll()
+			sProcessor.UpdatePrices()
+		}
+	}()
 }
 
 func (a *app) ListenAndServe() {

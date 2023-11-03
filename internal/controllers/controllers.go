@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"rapidEx/internal/test_case"
+	"rapidEx/internal/tickerStorage"
 	"rapidEx/internal/usecases/stock_usecases"
 )
 
@@ -63,6 +64,9 @@ func addStock(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+
+	tickerStorage := tickerstorage.GetInstanse()
+	tickerStorage.TickerAppend(ticker)
 
 	return c.SendStatus(fiber.StatusOK)
 }

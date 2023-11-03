@@ -1,9 +1,15 @@
 package stockPriceProcessor
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"math"
+	"rapidEx/internal/domain/stock"
 	stockBook "rapidEx/internal/domain/stock-book"
+	"rapidEx/internal/tickerStorage"
+	"rapidEx/internal/usecases/stock_usecases"
+	"rapidEx/internal/utils"
 )
 
 type stockPriceProcessor struct {
@@ -31,6 +37,7 @@ func meanWeight(book map[float64]float64) (float64, float64) {
 func (proc *stockPriceProcessor) MeanWeight(stockBook stockBook.StockBook) (float64, error) {
 	buyMean, buyWeight := meanWeight(stockBook.Buy)
 	sellMean, sellWeight := meanWeight(stockBook.Sell)
+	fmt.Println(len(stockBook.Buy), len(stockBook.Sell))
 
 	meanw := 0.0
 	var err error
@@ -62,15 +69,39 @@ func (proc *stockPriceProcessor) PreciseAs(part float64) int {
 	return k
 }
 
-// func (proc *stockPriceProcessor) UpdPrice(stb *stockBook.StockBook, quantmin uint64) float64 { // returns a rounded actual price
-// 	comb := make(map[float64]float64)
-// 	for k, v := range stb.Buy {
-// 		comb[k] = v
-// 	}
-// 	for k, v := range stb.Sell {
-// 		comb[k] = v
-// 	}
-// 	newprice := proc.MeanWeight(comb)
-// 	minval := 1 / float64(quantmin)
-// 	return proc.Round(newprice, proc.PreciseAs(minval))
-// }
+//UpdatePrices updates all stocks price
+func (proc *stockPriceProcessor) UpdatePrices()  {
+	tickerStorage := tickerstorage.GetInstanse()
+	tickers := tickerStorage.GetTickers()
+	for _, ticker := range tickers {
+		err := proc.UpdatePrice(ticker)
+		if err != nil{
+			fmt.Println(err)
+			continue
+		}
+	}
+}
+
+func (proc *stockPriceProcessor) UpdatePrice(ticker string) error {
+	s, err := stock_usecases.GetStock(ticker)
+	if err != nil {
+		return err
+	}
+	price, err := proc.MeanWeight(s.Stockbook)
+	if err != nil {
+		return err
+	}
+	s.Price = price
+	rc, err := utils.SetRedisConn()
+	if err != nil {
+		return err
+	}
+	sRep := stock.NewRepository(rc)
+	
+	ctx := context.Background()
+
+	fmt.Printf("New price of %s : %f", ticker, s.Price)
+
+	err = sRep.Set(ctx, *s)
+	return err
+}
