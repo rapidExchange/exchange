@@ -1,8 +1,8 @@
 package stockPriceProcessor
 
 import (
-	"math"
 	"errors"
+	"math"
 	stockBook "rapidEx/internal/domain/stock-book"
 )
 
@@ -13,42 +13,45 @@ func New() *stockPriceProcessor {
 	return &stockPriceProcessor{}
 }
 
-func meanWeight(book map[float64]float64) float64 { // returns the meanweight price
-	priWeight, suquant := 0.0, 0.0
-	for pri, quant := range book {
-		priWeight += pri * quant
-		suquant += quant
+// Returns the meanweight value and its weight
+func meanWeight(book map[float64]float64) (float64, float64) {
+	valWeight, sumquant := 0.0, 0.0
+	for val, quant := range book {
+		valWeight += val * quant
+		sumquant += quant
 	}
-	meanw := priWeight / suquant
-	return meanw
+	meanw := 0.0
+	if sumquant != 0 {
+		meanw = valWeight / sumquant
+	}
+	return meanw, sumquant
 }
 
-//TODO: refactor
+// Returns the meanweight price of stockbook. With an empty stockbook it returns zero and an error.
 func (proc *stockPriceProcessor) MeanWeight(stockBook stockBook.StockBook) (float64, error) {
-	buyWeight := meanWeight(stockBook.Buy)
-	sellWeight := meanWeight(stockBook.Sell)
-	if math.IsNaN(buyWeight) {
-		if math.IsNaN(sellWeight) {
-			return 0.0, errors.New("NaN price")
-		}
-		return sellWeight, nil
+	buyMean, buyWeight := meanWeight(stockBook.Buy)
+	sellMean, sellWeight := meanWeight(stockBook.Sell)
+
+	meanw := 0.0
+	var err error
+	if buyWeight != 0 || sellWeight != 0 {
+		meanw = (buyMean*buyWeight + sellMean*sellWeight) / (buyWeight + sellWeight)
+		err = nil
+	} else {
+		err = errors.New("empty stock book")
 	}
-	if math.IsNaN(sellWeight) {
-		if math.IsNaN(buyWeight) {
-			return 0.0, errors.New("NaN price")
-		}
-		return buyWeight, nil
-	}
-	return (sellWeight + buyWeight)/2, nil
+	return meanw, err
 }
 
-func (proc *stockPriceProcessor) Round(x float64, prec int) float64 { // round to a floor
+// Rounds to a floor with given precision
+func (proc *stockPriceProcessor) Round(x float64, prec int) float64 {
 	pow := math.Pow10(prec)
 	rounded := math.Floor(x * pow)
 	return rounded / pow
 }
 
-func (proc *stockPriceProcessor) PreciseAs(part float64) int { // returns the number of significant decimal places
+// Returns the number of significant decimal places
+func (proc *stockPriceProcessor) PreciseAs(part float64) int {
 	k := 0
 	if part < 0.99 {
 		for int(part)%10 == 0 {
