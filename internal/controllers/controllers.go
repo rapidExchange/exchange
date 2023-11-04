@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -9,9 +10,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"rapidEx/internal/test_case"
+	"rapidEx/internal/domain/stock"
+	"rapidEx/internal/redis-connect"
 	"rapidEx/internal/tickerStorage"
-	"rapidEx/internal/usecases/stock_usecases"
 )
 
 //TODO: normal error handling
@@ -38,7 +39,6 @@ func stockPair(c *fiber.Ctx) error {
 }
 
 func addStock(c *fiber.Ctx) error {
-	go case1.Case()
 	getPriceRequest := new(getTickerPriceBinanceRequest)
 
 	if err := c.BodyParser(&getPriceRequest); err != nil {
@@ -60,10 +60,18 @@ func addStock(c *fiber.Ctx) error {
 
 	ticker := getPriceRequest.FirstSymbol + "/" + getPriceRequest.SecondSymbol
 
-	err = stock_usecases.SetStock(ticker, price)
+	Stock := stock.New(ticker, price)
+
+	redisClient, err := redisconnect.SetRedisConn()
 	if err != nil {
 		return err
 	}
+
+	stockRepository := stock.NewRepository(redisClient)
+
+	ctx := context.Background()
+
+	stockRepository.Set(ctx, *Stock)
 
 	tickerStorage := tickerstorage.GetInstanse()
 	tickerStorage.TickerAppend(ticker)
@@ -91,28 +99,28 @@ func RegisterRoutes(app *fiber.App) {
 func getBinancePrice(symbol string) (string, error) {
 	url := "https://api.binance.com/api/v3/ticker/price?symbol=" + symbol
 
-	req, err := http.NewRequest("GET", url, nil)
+	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
 	}
 
 	client := &http.Client{}
 
-	resp, err := client.Do(req)
+	resp, err := client.Do(request)
 	if err != nil {
 		return "", err
 	}
 
-	priceResp, err := io.ReadAll(resp.Body)
+	priceResponse, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	var binanceResp getTickerPriceBinanceResponse
+	var binanceResponse getTickerPriceBinanceResponse
 
-	err = json.Unmarshal(priceResp, &binanceResp)
+	err = json.Unmarshal(priceResponse, &binanceResponse)
 	if err != nil {
 		return "", err
 	}
-	return binanceResp.Price, nil
+	return binanceResponse.Price, nil
 } 

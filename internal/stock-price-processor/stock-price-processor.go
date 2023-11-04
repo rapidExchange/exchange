@@ -3,13 +3,12 @@ package stockPriceProcessor
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"math"
 	"rapidEx/internal/domain/stock"
 	stockBook "rapidEx/internal/domain/stock-book"
 	"rapidEx/internal/tickerStorage"
-	"rapidEx/internal/usecases/stock_usecases"
-	"rapidEx/internal/utils"
+	"rapidEx/internal/redis-connect"
 )
 
 type stockPriceProcessor struct {
@@ -37,7 +36,6 @@ func meanWeight(book map[float64]float64) (float64, float64) {
 func (proc *stockPriceProcessor) MeanWeight(stockBook stockBook.StockBook) (float64, error) {
 	buyMean, buyWeight := meanWeight(stockBook.Buy)
 	sellMean, sellWeight := meanWeight(stockBook.Sell)
-	fmt.Println(len(stockBook.Buy), len(stockBook.Sell))
 
 	meanw := 0.0
 	var err error
@@ -76,32 +74,32 @@ func (proc *stockPriceProcessor) UpdatePrices()  {
 	for _, ticker := range tickers {
 		err := proc.UpdatePrice(ticker)
 		if err != nil{
-			fmt.Println(err)
+			log.Println(err)
 			continue
 		}
 	}
 }
 
 func (proc *stockPriceProcessor) UpdatePrice(ticker string) error {
-	s, err := stock_usecases.GetStock(ticker)
+	redisClient, err := redisconnect.SetRedisConn()
 	if err != nil {
 		return err
 	}
-	price, err := proc.MeanWeight(s.Stockbook)
-	if err != nil {
-		return err
-	}
-	s.Price = price
-	rc, err := utils.SetRedisConn()
-	if err != nil {
-		return err
-	}
-	sRep := stock.NewRepository(rc)
-	
+	sRep := stock.NewRepository(redisClient)
 	ctx := context.Background()
 
-	fmt.Printf("New price of %s : %f", ticker, s.Price)
+	stock, err := sRep.Get(ctx, ticker)
+	if err != nil {
+		return err
+	}
+	price, err := proc.MeanWeight(stock.Stockbook)
+	if err != nil {
+		return err
+	}
+	stock.Price = price
+	
+	log.Printf("New price of %s : %f", ticker, stock.Price)
 
-	err = sRep.Set(ctx, *s)
+	err = sRep.Set(ctx, *stock)
 	return err
 }

@@ -2,7 +2,6 @@ package generator
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math"
 	"math/rand"
@@ -10,8 +9,7 @@ import (
 	"rapidEx/internal/domain/order"
 	"rapidEx/internal/domain/stock"
 	"rapidEx/internal/tickerStorage"
-	"rapidEx/internal/usecases/stock_usecases"
-	"rapidEx/internal/utils"
+	"rapidEx/internal/redis-connect"
 )
 
 type Generator struct {
@@ -48,27 +46,25 @@ func (g Generator) GenerateForAll() {
 		log.Println("Waiting stocks for orders generate")
 	}
 	for _, ticker := range tickers {
-		s, err := stock_usecases.GetStock(ticker)
-		fmt.Println(s.Stockbook)
+		redisClient, err := redisconnect.SetRedisConn()
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		log.Println("Generate for:", s.Ticker)
-		g.GenerateALot(s, 10)
-		rc, err := utils.SetRedisConn()
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-		sRepo := stock.NewRepository(rc)
+
+		stockRepository := stock.NewRepository(redisClient)
 
 		ctx := context.Background()
 
-		fmt.Println(s.Stockbook)
+		stock, err := stockRepository.Get(ctx, ticker)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
 
+		g.GenerateALot(stock, 10)
 
-		sRepo.Set(ctx, *s)
+		stockRepository.Set(ctx, *stock)
 		
 	}
 }
