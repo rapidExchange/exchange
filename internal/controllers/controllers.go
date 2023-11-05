@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,11 +19,12 @@ import (
 type getTickerPriceBinanceRequest struct {
 	FirstSymbol  string `json:"first_symbol"`
 	SecondSymbol string `json:"second_symbol"`
+	Precision    int    `json:"precision"`
 }
 
 type getTickerPriceBinanceResponse struct {
-	Symbol string `json:"symbol"`
-	Price  string `json:"price"`
+	Symbol string  `json:"symbol"`
+	Price  float64 `json:"price,string"`
 }
 
 func home(c *fiber.Ctx) error {
@@ -40,42 +40,27 @@ func stockPair(c *fiber.Ctx) error {
 }
 
 func addStock(c *fiber.Ctx) error {
-	getPriceRequest := new(getTickerPriceBinanceRequest)
+	getPriceBinanceRequest := new(getTickerPriceBinanceRequest)
 
-	if err := c.BodyParser(&getPriceRequest); err != nil {
+	if err := c.BodyParser(&getPriceBinanceRequest); err != nil {
 		return err
 	}
 
-	symbol := strings.ToUpper(strings.TrimSpace(getPriceRequest.FirstSymbol) +
-		strings.TrimSpace(getPriceRequest.SecondSymbol))
+	symbol := createSymbol(getPriceBinanceRequest.FirstSymbol, getPriceBinanceRequest.SecondSymbol)
 
-	priceString, err := getBinancePrice(symbol)
+	price, err := getBinancePrice(symbol)
 	if err != nil {
 		return err
 	}
 
-	price, err := strconv.ParseFloat(priceString, 64)
+	ticker := createTicker(getPriceBinanceRequest.FirstSymbol, getPriceBinanceRequest.SecondSymbol)
+
+	err = setStock(ticker, price)
 	if err != nil {
 		return err
 	}
 
-	ticker := getPriceRequest.FirstSymbol + "/" + getPriceRequest.SecondSymbol
-
-	Stock := stock.New(ticker, price)
-
-	redisClient, err := redisconnect.SetRedisConn()
-	if err != nil {
-		return err
-	}
-
-	stockRepository := stock.NewRepository(redisClient)
-
-	ctx := context.Background()
-
-	stockRepository.Set(ctx, *Stock)
-
-	tickerStorage := tickerstorage.GetInstanse()
-	tickerStorage.TickerAppend(ticker)
+	setTickerToStorage(ticker, getPriceBinanceRequest.Precision)
 
 	return c.SendStatus(fiber.StatusOK)
 }
@@ -97,31 +82,82 @@ func RegisterRoutes(app *fiber.App) {
 	app.Get("/", home)
 }
 
-func getBinancePrice(symbol string) (string, error) {
+func getBinancePrice(symbol string) (float64, error) {
 	url := "https://api.binance.com/api/v3/ticker/price?symbol=" + symbol
+	var zero float64
+
+	response, err := makeBinancePriceRequest(url)
+	if err != nil {
+		return zero, nil
+	}
+
+	priceBinanceResponse, err := readBody(response.Body)
+	if err != nil {
+		return zero, err
+	}
+
+	binanceResponse,  err := unmarshalToBinanceResponse(priceBinanceResponse)
+	if err != nil {
+		return 0.0, err
+	}
+	return binanceResponse.Price, nil
+}
+
+func setStock(ticker string, price float64) error {
+	Stock := stock.New(ticker, price)
+
+	redisClient, err := redisconnect.SetRedisConn()
+	if err != nil {
+		return err
+	}
+
+	stockRepository := stock.NewRepository(redisClient)
+
+	ctx := context.Background()
+
+	err = stockRepository.Set(ctx, *Stock)
+
+	return err
+}
+
+func makeBinancePriceRequest(url string) (*http.Response, error) {
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	client := &http.Client{}
 
 	response, err := client.Do(request)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	return response, nil
+}
 
-	priceResponse, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", err
+func unmarshalToBinanceResponse(response []byte) (*getTickerPriceBinanceResponse, error) {
+	binanceResponse := &getTickerPriceBinanceResponse{}
+
+	if err := json.Unmarshal(response, &binanceResponse); err != nil {
+		return nil, err
 	}
+	return binanceResponse, nil
+}
 
-	var binanceResponse getTickerPriceBinanceResponse
+func setTickerToStorage(ticker string, precision int) {
+	tickerStorage := tickerstorage.GetInstanse()
+	tickerStorage.TickerAppend(ticker, precision)
+}
 
-	err = json.Unmarshal(priceResponse, &binanceResponse)
-	if err != nil {
-		return "", err
-	}
-	return binanceResponse.Price, nil
+func readBody(source io.Reader) ([]byte, error) {
+	return io.ReadAll(source)
+}
+
+func createSymbol(firstStock, secondStock string) string {
+	return strings.ToUpper(firstStock + secondStock)
+}
+
+func createTicker(firstStock, secondStock string) string {
+	return strings.ToLower(firstStock + "/" + secondStock)
 }
