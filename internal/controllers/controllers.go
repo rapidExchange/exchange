@@ -21,7 +21,6 @@ import (
 type getTickerPriceBinanceRequest struct {
 	FirstSymbol  string `json:"first_symbol"`
 	SecondSymbol string `json:"second_symbol"`
-	Precision    int    `json:"precision"`
 }
 
 type getTickerPriceBinanceResponse struct {
@@ -55,14 +54,18 @@ func addStock(c *fiber.Ctx) error {
 		return err
 	}
 
+	precision := getPrecision(price)
+
+	roundedPrice := roundWithPrecision(price)
+
 	ticker := createTicker(getPriceBinanceRequest.FirstSymbol, getPriceBinanceRequest.SecondSymbol)
 
-	err = setStock(ticker, price)
+	err = setStock(ticker, roundedPrice)
 	if err != nil {
 		return err
 	}
 
-	setTickerToStorage(ticker, getPriceBinanceRequest.Precision)
+	setTickerToStorage(ticker, precision)
 
 	return c.SendStatus(fiber.StatusOK)
 }
@@ -102,10 +105,8 @@ func getBinancePrice(symbol string) (float64, error) {
 	if err != nil {
 		return 0.0, err
 	}
-	proc := stockPriceProcessor.New()
-	prec := proc.PreciseAs(strconv.FormatFloat(binanceResponse.Price, 'f', -1, 64)) // need to write in getPriceBinanceRequest.Precision (see addStock)
-	binancePrice := proc.Round(binanceResponse.Price, prec)
-	return binancePrice, nil
+
+	return binanceResponse.Price, nil
 }
 
 func setStock(ticker string, price float64) error {
@@ -148,6 +149,17 @@ func unmarshalToBinanceResponse(response []byte) (*getTickerPriceBinanceResponse
 		return nil, err
 	}
 	return binanceResponse, nil
+}
+
+func roundWithPrecision(price float64) float64 {
+	priceProcessor := stockPriceProcessor.New()
+	precision := getPrecision(price)
+	return priceProcessor.Round(price, precision)
+}
+
+func getPrecision(price float64) int {
+	priceProcessor := stockPriceProcessor.New()
+	return priceProcessor.PreciseAs(strconv.FormatFloat(price, 'f', -1, 64))
 }
 
 func setTickerToStorage(ticker string, precision int) {
