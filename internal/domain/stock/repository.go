@@ -3,19 +3,18 @@ package stock
 import (
 	"context"
 	"encoding/json"
-	"time"
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/redis/go-redis/v9"
-
 )
 
 type StockModify struct {
 	Ticker string
-	Price float64
-	Buy map[string]string
-	Sell map[string]string
+	Price  float64
+	Buy    map[string]string
+	Sell   map[string]string
 }
 
 func NewStockMapString(s Stock) *StockModify {
@@ -27,16 +26,16 @@ func NewStockMapString(s Stock) *StockModify {
 	return &sMap
 }
 
-func (s StockModify)MarshalBinary() ([]byte, error) {
+func (s StockModify) MarshalBinary() ([]byte, error) {
 	return json.Marshal(s)
 }
-
 
 func UnmarshalBinary(data []byte) (*StockModify, error) {
 	var s StockModify
 	err := json.Unmarshal(data, &s)
 	return &s, err
 }
+
 //TODO: handle errors
 
 type Repository interface {
@@ -45,14 +44,14 @@ type Repository interface {
 	Del(ctx context.Context, ticker string) error
 }
 
-//Redis client
+// Redis client
 type rsClient struct {
-	rc	*redis.Client
+	rc *redis.Client
 }
 
 func (r *rsClient) Set(ctx context.Context, stock Stock) error {
 	stockMapString := NewStockMapString(stock)
-	status := r.rc.Set(ctx, stock.Ticker, stockMapString, time.Second * 1000)
+	status := r.rc.Set(ctx, stock.Ticker, stockMapString, time.Second*1000)
 	if status.Err() != nil {
 		return status.Err()
 	}
@@ -80,7 +79,7 @@ func (r *rsClient) Get(ctx context.Context, ticker string) (*Stock, error) {
 		return nil, err
 	}
 
-	mBuy, err:=mapStringToFloat(stockMapString.Buy)
+	mBuy, err := mapStringToFloat(stockMapString.Buy)
 	if err != nil {
 		return nil, err
 	}
