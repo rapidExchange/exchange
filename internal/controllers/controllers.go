@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
 	"rapidEx/internal/domain/stock"
 	redisconnect "rapidEx/internal/redis-connect"
+	stockPriceProcessor "rapidEx/internal/stock-price-processor"
 	tickerstorage "rapidEx/internal/tickerStorage"
 )
 
@@ -19,7 +21,6 @@ import (
 type getTickerPriceBinanceRequest struct {
 	FirstSymbol  string `json:"first_symbol"`
 	SecondSymbol string `json:"second_symbol"`
-	Precision    int    `json:"precision"`
 }
 
 type getTickerPriceBinanceResponse struct {
@@ -53,14 +54,18 @@ func addStock(c *fiber.Ctx) error {
 		return err
 	}
 
+	precision := getPrecision(price)
+
+	roundedPrice := roundWithPrecision(price)
+
 	ticker := createTicker(getPriceBinanceRequest.FirstSymbol, getPriceBinanceRequest.SecondSymbol)
 
-	err = setStock(ticker, price)
+	err = setStock(ticker, roundedPrice)
 	if err != nil {
 		return err
 	}
 
-	setTickerToStorage(ticker, getPriceBinanceRequest.Precision)
+	setTickerToStorage(ticker, precision)
 
 	return c.SendStatus(fiber.StatusOK)
 }
@@ -96,10 +101,11 @@ func getBinancePrice(symbol string) (float64, error) {
 		return zero, err
 	}
 
-	binanceResponse,  err := unmarshalToBinanceResponse(priceBinanceResponse)
+	binanceResponse, err := unmarshalToBinanceResponse(priceBinanceResponse)
 	if err != nil {
 		return 0.0, err
 	}
+
 	return binanceResponse.Price, nil
 }
 
@@ -143,6 +149,17 @@ func unmarshalToBinanceResponse(response []byte) (*getTickerPriceBinanceResponse
 		return nil, err
 	}
 	return binanceResponse, nil
+}
+
+func roundWithPrecision(price float64) float64 {
+	priceProcessor := stockPriceProcessor.New()
+	precision := getPrecision(price)
+	return priceProcessor.Round(price, precision)
+}
+
+func getPrecision(price float64) int {
+	priceProcessor := stockPriceProcessor.New()
+	return priceProcessor.PreciseAs(strconv.FormatFloat(price, 'f', -1, 64))
 }
 
 func setTickerToStorage(ticker string, precision int) {
