@@ -49,14 +49,12 @@ func (proc *stockPriceProcessor) MeanWeight(stockBook stockBook.StockBook) (floa
 	return meanw, err
 }
 
-// Rounds to a floor with given precision
 func (proc *stockPriceProcessor) Round(x float64, prec int) float64 {
 	pow := math.Pow10(prec)
 	rounded := math.Floor(x * pow)
 	return rounded / pow
 }
 
-// s is like "123.45600000"
 func (proc *stockPriceProcessor) PreciseAs(s string) int {
 	st := strings.TrimRight(strings.Split(s, ".")[1], "0")
 	return len(st)
