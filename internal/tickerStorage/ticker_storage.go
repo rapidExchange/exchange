@@ -5,39 +5,35 @@ import "sync"
 var instance *tickerStorage = nil
 var once sync.Once
 
-type ticker struct {
-	T         string
-	Precision int
-}
-
 type TickerStorage interface {
-	TickerAppend(ticker string)
+	TickerAppend(ticker string, precision int)
 	GetTickers() []string
 }
 
 // tickerStorage is an implementation of singleton pattern for store all stock tickers
+// the key of map is a ticker, value is precision(used for round prices and orders)
 type tickerStorage struct {
-	Tickers map[string]struct{}
+	TickersPrecision map[string]int
 	sync.RWMutex
 }
 
 func GetInstanse() TickerStorage {
 	once.Do(func() {
-		instance = &tickerStorage{Tickers: make(map[string]struct{})}
+		instance = &tickerStorage{TickersPrecision: make(map[string]int)}
 	})
 	return instance
 }
 
-func (t *tickerStorage) TickerAppend(ticker string) {
+func (t *tickerStorage) TickerAppend(ticker string, precision int) {
 	t.Lock()
 	defer t.Unlock()
-	t.Tickers[ticker] = struct{}{}
+	t.TickersPrecision[ticker] = precision
 }
 
 func (t *tickerStorage) GetTickers() []string {
 	tickers := make([]string, 0)
 	t.RLock()
-	for k := range t.Tickers {
+	for k := range t.TickersPrecision {
 		tickers = append(tickers, k)
 	}
 	t.RUnlock()
