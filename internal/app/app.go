@@ -13,13 +13,13 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"rapidEx/internal/generator"
-	"rapidEx/internal/stock-price-processor"
+	stockPriceProcessor "rapidEx/internal/stock-price-processor"
 )
 
 type app struct {
-	c 				config.Config
-	ctx				context.Context
-	redisClient		*redis.Client
+	c           config.Config
+	ctx         context.Context
+	redisClient *redis.Client
 }
 
 func New() (*app, error) {

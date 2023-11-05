@@ -5,7 +5,7 @@ import (
 )
 
 type Config struct {
-	RedisUser string `mapstructure:"REDIS_USER"`
+	RedisUser     string `mapstructure:"REDIS_USER"`
 	RedisPassword string `mapstructure:"REDIS_PASS"`
 }
 

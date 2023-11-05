@@ -5,13 +5,18 @@ import "sync"
 var instance *tickerStorage = nil
 var once sync.Once
 
+type ticker struct {
+	T         string
+	Precision int
+}
+
 type TickerStorage interface {
 	TickerAppend(ticker string)
 	GetTickers() []string
 }
 
-//tickerStorage is an implementation of singleton pattern for store all stock tickers
-type tickerStorage struct{
+// tickerStorage is an implementation of singleton pattern for store all stock tickers
+type tickerStorage struct {
 	Tickers map[string]struct{}
 	sync.RWMutex
 }

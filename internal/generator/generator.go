@@ -28,15 +28,15 @@ func (g Generator) generate(cPrice float64) (volume float64, price float64) {
 func (g Generator) OrderGenerate(s *stock.Stock) order.Order {
 	volume, price := g.generate(s.Price)
 
-	ord := order.Order{Ticker: s.Ticker, Quantity: volume, Price: price}
+	Order := order.Order{Ticker: s.Ticker, Quantity: volume, Price: price}
 
-	switch ord.Price > s.Price {
+	switch Order.Price > s.Price {
 	case true:
-		s.Stockbook.Sell[ord.Price] += ord.Quantity
+		s.Stockbook.Sell[Order.Price] += Order.Quantity
 	default:
-		s.Stockbook.Buy[ord.Price] += ord.Quantity
+		s.Stockbook.Buy[Order.Price] += Order.Quantity
 	}
-	return ord
+	return Order
 }
 
 func (g Generator) GenerateForAll() {

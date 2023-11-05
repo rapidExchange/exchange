@@ -1,10 +1,11 @@
 package redisconnect
 
 import (
-	"os"
 	"fmt"
-	"github.com/redis/go-redis/v9"
+	"os"
 	"rapidEx/config"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func SetRedisConn() (*redis.Client, error) {

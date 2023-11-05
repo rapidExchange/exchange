@@ -11,21 +11,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"rapidEx/internal/domain/stock"
-	"rapidEx/internal/redis-connect"
-	"rapidEx/internal/tickerStorage"
+	redisconnect "rapidEx/internal/redis-connect"
+	tickerstorage "rapidEx/internal/tickerStorage"
 )
 
 //TODO: normal error handling
 
 type getTickerPriceBinanceRequest struct {
-	FirstSymbol string `json:"first_symbol"`
+	FirstSymbol  string `json:"first_symbol"`
 	SecondSymbol string `json:"second_symbol"`
 }
 
 type getTickerPriceBinanceResponse struct {
 	Symbol string `json:"symbol"`
-	Price string `json:"price"`
+	Price  string `json:"price"`
 }
+
 func home(c *fiber.Ctx) error {
 	return c.SendString("Start page")
 }
@@ -46,7 +47,7 @@ func addStock(c *fiber.Ctx) error {
 	}
 
 	symbol := strings.ToUpper(strings.TrimSpace(getPriceRequest.FirstSymbol) +
-	strings.TrimSpace(getPriceRequest.SecondSymbol))
+		strings.TrimSpace(getPriceRequest.SecondSymbol))
 
 	priceString, err := getBinancePrice(symbol)
 	if err != nil {
@@ -106,12 +107,12 @@ func getBinancePrice(symbol string) (string, error) {
 
 	client := &http.Client{}
 
-	resp, err := client.Do(request)
+	response, err := client.Do(request)
 	if err != nil {
 		return "", err
 	}
 
-	priceResponse, err := io.ReadAll(resp.Body)
+	priceResponse, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
@@ -123,4 +124,4 @@ func getBinancePrice(symbol string) (string, error) {
 		return "", err
 	}
 	return binanceResponse.Price, nil
-} 
+}
