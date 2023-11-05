@@ -7,8 +7,9 @@ import (
 	"math"
 	"rapidEx/internal/domain/stock"
 	stockBook "rapidEx/internal/domain/stock-book"
-	"rapidEx/internal/tickerStorage"
-	"rapidEx/internal/redis-connect"
+	redisconnect "rapidEx/internal/redis-connect"
+	tickerstorage "rapidEx/internal/tickerStorage"
+	"strings"
 )
 
 type stockPriceProcessor struct {
@@ -55,25 +56,19 @@ func (proc *stockPriceProcessor) Round(x float64, prec int) float64 {
 	return rounded / pow
 }
 
-// Returns the number of significant decimal places
-func (proc *stockPriceProcessor) PreciseAs(part float64) int {
-	k := 0
-	if part < 0.99 {
-		for int(part)%10 == 0 {
-			k++
-			part *= 10
-		}
-	}
-	return k
+// s is like "123.45600000"
+func (proc *stockPriceProcessor) PreciseAs(s string) int {
+	st := strings.TrimRight(strings.Split(s, ".")[1], "0")
+	return len(st)
 }
 
-//UpdatePrices updates all stocks price
-func (proc *stockPriceProcessor) UpdatePrices()  {
+// UpdatePrices updates all stocks price
+func (proc *stockPriceProcessor) UpdatePrices() {
 	tickerStorage := tickerstorage.GetInstanse()
 	tickers := tickerStorage.GetTickers()
 	for _, ticker := range tickers {
 		err := proc.UpdatePrice(ticker)
-		if err != nil{
+		if err != nil {
 			log.Println(err)
 			continue
 		}
@@ -97,7 +92,7 @@ func (proc *stockPriceProcessor) UpdatePrice(ticker string) error {
 		return err
 	}
 	stock.Price = price
-	
+
 	log.Printf("New price of %s : %.20f", ticker, stock.Price)
 
 	err = sRep.Set(ctx, *stock)

@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
 	"rapidEx/internal/domain/stock"
 	redisconnect "rapidEx/internal/redis-connect"
+	stockPriceProcessor "rapidEx/internal/stock-price-processor"
 	tickerstorage "rapidEx/internal/tickerStorage"
 )
 
@@ -96,11 +98,14 @@ func getBinancePrice(symbol string) (float64, error) {
 		return zero, err
 	}
 
-	binanceResponse,  err := unmarshalToBinanceResponse(priceBinanceResponse)
+	binanceResponse, err := unmarshalToBinanceResponse(priceBinanceResponse)
 	if err != nil {
 		return 0.0, err
 	}
-	return binanceResponse.Price, nil
+	proc := stockPriceProcessor.New()
+	prec := proc.PreciseAs(strconv.FormatFloat(binanceResponse.Price, 'f', -1, 64)) // need to write in getPriceBinanceRequest.Precision (see addStock)
+	binancePrice := proc.Round(binanceResponse.Price, prec)
+	return binancePrice, nil
 }
 
 func setStock(ticker string, price float64) error {
