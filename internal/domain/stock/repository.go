@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"time"
 	"errors"
+	"strconv"
 
 	"github.com/redis/go-redis/v9"
 
-	"rapidEx/internal/utils"
 )
 
 type StockModify struct {
@@ -22,8 +22,8 @@ func NewStockMapString(s Stock) *StockModify {
 	var sMap StockModify
 	sMap.Ticker = s.Ticker
 	sMap.Price = s.Price
-	sMap.Buy = utils.MapFloatToString(s.Stockbook.Buy)
-	sMap.Sell = utils.MapFloatToString(s.Stockbook.Sell)
+	sMap.Buy = mapFloatToString(s.Stockbook.Buy)
+	sMap.Sell = mapFloatToString(s.Stockbook.Sell)
 	return &sMap
 }
 
@@ -80,12 +80,12 @@ func (r *rsClient) Get(ctx context.Context, ticker string) (*Stock, error) {
 		return nil, err
 	}
 
-	mBuy, err:= utils.MapStringToFloat(stockMapString.Buy)
+	mBuy, err:=mapStringToFloat(stockMapString.Buy)
 	if err != nil {
 		return nil, err
 	}
 
-	mSell, err := utils.MapStringToFloat(stockMapString.Sell)
+	mSell, err := mapStringToFloat(stockMapString.Sell)
 	if err != nil {
 		return nil, err
 	}
@@ -109,4 +109,34 @@ func (r *rsClient) Del(ctx context.Context, ticker string) error {
 
 func NewRepository(rc *redis.Client) Repository {
 	return &rsClient{rc: rc}
+}
+
+func mapFloatToString(m map[float64]float64) map[string]string {
+	stringMap := make(map[string]string)
+
+	for k, v := range m {
+		stringKey := strconv.FormatFloat(k, 'f', -1, 64)
+		stringValue := strconv.FormatFloat(v, 'f', -1, 64)
+		stringMap[stringKey] = stringValue
+	}
+	return stringMap
+}
+
+func mapStringToFloat(m map[string]string) (map[float64]float64, error) {
+	floatMap := make(map[float64]float64)
+
+	for k, v := range m {
+		floatKey, err := strconv.ParseFloat(k, 64)
+		if err != nil {
+			return nil, err
+		}
+		floatVal, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		floatMap[floatKey] = floatVal
+	}
+
+	return floatMap, nil
 }
