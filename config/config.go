@@ -7,6 +7,9 @@ import (
 type Config struct {
 	RedisUser     string `mapstructure:"REDIS_USER"`
 	RedisPassword string `mapstructure:"REDIS_PASS"`
+	MysqlUser     string `mapstructure:"MYSQL_USER"`
+	MysqlPassword string `mapstructure:"MYSQL_PASSWORD"`
+	MysqlDBName   string `mapstructure:"MYSQL_DBNAME"`
 }
 
 func LoadConfig(path string) (c Config, err error) {
