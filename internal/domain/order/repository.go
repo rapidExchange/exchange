@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -18,7 +19,7 @@ type rsClient struct {
 }
 
 func (r *rsClient) Set(ctx context.Context, order Order) error {
-	status := r.rc.Set(ctx, order.Ticker, order, 1)
+	status := r.rc.HSet(ctx, "orders", uuid.New().String(), order)
 	if status.Err() != nil {
 		return status.Err()
 	}
@@ -27,22 +28,23 @@ func (r *rsClient) Set(ctx context.Context, order Order) error {
 }
 
 func (r *rsClient) Get(ctx context.Context, ticker string) (*Order, error) {
-	order := r.rc.Get(ctx, ticker)
+	stringCmd := r.rc.HGetAll(ctx, "orders")
+	stringCmd.Scan()
 	switch {
-	case order.Err() == redis.Nil:
+	case stringCmd.Err() == redis.Nil:
 		return nil, errors.New("Order not found")
-	case order.Err() != nil:
-		return nil, order.Err()
+	case stringCmd.Err() != nil:
+		return nil, stringCmd.Err()
 	}
 
-	s := Order{}
+	order := Order{}
 
-	err := order.Scan(&s)
+	err := stringCmd.Scan(&order)
 	if err != nil {
 		return nil, err
 	}
 
-	return &s, nil
+	return &order, nil
 }
 
 func (r *rsClient) Del(ctx context.Context, ticker string) error {

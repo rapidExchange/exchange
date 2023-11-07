@@ -6,12 +6,12 @@ type Order struct {
 	Ticker   string
 	Quantity float64
 	Price    float64
-	User     string
+	UserUUID string
 }
 
-func New(ticker, user string, quantity, price float64) *Order {
+func New(ticker, UserUUID string, quantity, price float64) *Order {
 	return &Order{Ticker: ticker,
-		User:     user,
+		UserUUID: UserUUID,
 		Quantity: quantity,
 		Price:    price}
 }
