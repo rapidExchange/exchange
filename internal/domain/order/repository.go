@@ -2,6 +2,8 @@ package order
 
 import (
 	"context"
+	"errors"
+
 	"github.com/redis/go-redis/v9"
 )
 
@@ -11,9 +13,8 @@ type Repository interface {
 	Del(ctx context.Context, ticker string) error
 }
 
-//Redis client
 type rsClient struct {
-	rc	*redis.Client
+	rc *redis.Client
 }
 
 func (r *rsClient) Set(ctx context.Context, order Order) error {
@@ -26,14 +27,17 @@ func (r *rsClient) Set(ctx context.Context, order Order) error {
 }
 
 func (r *rsClient) Get(ctx context.Context, ticker string) (*Order, error) {
-	rOrder := r.rc.Get(ctx, ticker)
-	if rOrder.Err() != nil {
-		return nil, rOrder.Err()
+	order := r.rc.Get(ctx, ticker)
+	switch {
+	case order.Err() == redis.Nil:
+		return nil, errors.New("Order not found")
+	case order.Err() != nil:
+		return nil, order.Err()
 	}
 
 	s := Order{}
 
-	err := rOrder.Scan(&s)
+	err := order.Scan(&s)
 	if err != nil {
 		return nil, err
 	}
