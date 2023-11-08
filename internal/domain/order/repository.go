@@ -3,22 +3,23 @@ package order
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
 type Repository interface {
-	Set(ctx context.Context, order Order) error
-	Get(ctx context.Context, ticker string) (*Order, error)
-	Del(ctx context.Context, ticker string) error
+	Set(ctx context.Context, order *Order) error
+	GetAll(ctx context.Context) ([]*Order, error)
+	Del(ctx context.Context, order *Order) error
 }
 
 type rsClient struct {
 	rc *redis.Client
 }
 
-func (r *rsClient) Set(ctx context.Context, order Order) error {
+func (r *rsClient) Set(ctx context.Context, order *Order) error {
 	status := r.rc.HSet(ctx, "orders", uuid.New().String(), order)
 	if status.Err() != nil {
 		return status.Err()
@@ -27,28 +28,36 @@ func (r *rsClient) Set(ctx context.Context, order Order) error {
 	return nil
 }
 
-func (r *rsClient) Get(ctx context.Context, ticker string) (*Order, error) {
+func (r *rsClient) GetAll(ctx context.Context) ([]*Order, error) {
 	stringCmd := r.rc.HGetAll(ctx, "orders")
-	stringCmd.Scan()
+
 	switch {
 	case stringCmd.Err() == redis.Nil:
-		return nil, errors.New("Order not found")
+		return nil, errors.New("orders not found")
 	case stringCmd.Err() != nil:
 		return nil, stringCmd.Err()
 	}
 
-	order := Order{}
-
-	err := stringCmd.Scan(&order)
+	result, err := stringCmd.Result()
 	if err != nil {
 		return nil, err
 	}
+	orders := make([]*Order, 0)
+	for _, v := range result {
+		var o Order
+		err := o.UnmarshalBinary([]byte(v))
+		if err != nil {
+			return nil, err
+		}
 
-	return &order, nil
+		orders = append(orders, &o)
+	}
+	return orders, nil
 }
 
-func (r *rsClient) Del(ctx context.Context, ticker string) error {
-	intCmd := r.rc.Del(ctx, ticker)
+func (r *rsClient) Del(ctx context.Context, order *Order) error {
+	intCmd := r.rc.HDel(ctx, "orders", order.OrderUUID.String())
+	log.Println(intCmd.Result())
 
 	if intCmd.Err() != nil {
 		return intCmd.Err()
