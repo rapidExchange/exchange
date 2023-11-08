@@ -19,6 +19,5 @@ func SetMysqlConnection() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s", c.MysqlUser, c.MysqlPassword, c.MysqlDBName))
 }

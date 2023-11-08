@@ -4,15 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-
-	"github.com/google/uuid"
 )
 
 type Repository interface {
 	Create(ctx context.Context, user *User) error
-	Get(ctx context.Context, uuid uuid.UUID) (*User, error)
+	Get(ctx context.Context, email string) (*User, error)
 	Update(ctx context.Context, user *User) error
-	Delete(ctx context.Context, uuid uuid.UUID) error
+	Delete(ctx context.Context, email string) error
 }
 
 type mysqlRepository struct {
@@ -30,13 +28,13 @@ func (m *mysqlRepository) Create(ctx context.Context, user *User) error {
 	return err
 }
 
-func (m *mysqlRepository) Get(ctx context.Context, uuid uuid.UUID) (*User, error) {
+func (m *mysqlRepository) Get(ctx context.Context, email string) (*User, error) {
 	err := m.mc.Ping()
 	if err != nil {
 		return nil, err
 	}
 
-	row := m.mc.QueryRow("SELECT * FROM users WHERE uuid=?", uuid.String())
+	row := m.mc.QueryRow("SELECT * FROM users WHERE email=?", email)
 	if row.Err() == sql.ErrNoRows {
 		return nil, errors.New("no user with provided uuid")
 	}
@@ -58,13 +56,13 @@ func (m *mysqlRepository) Update(ctx context.Context, user *User) error {
 	return err
 }
 
-func (m *mysqlRepository) Delete(ctx context.Context, uuid uuid.UUID) error {
+func (m *mysqlRepository) Delete(ctx context.Context, email string) error {
 	err := m.mc.Ping()
 	if err != nil {
 		return err
 	}
 
-	_, err = m.mc.Exec("DELETE FROM users WHERE uuid=?", uuid.String())
+	_, err = m.mc.Exec("DELETE FROM users WHERE email=?", email)
 	return err
 }
 
