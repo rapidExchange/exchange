@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"rapidEx/internal/domain/user"
-	"rapidEx/internal/mysql-connect"
+	mysqlconnect "rapidEx/internal/mysql-connect"
 )
 
 func TestUser(t *testing.T) {
