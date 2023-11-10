@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"database/sql"
-	"errors"
 )
 
 type Repository interface {
@@ -36,7 +35,7 @@ func (m *mysqlRepository) Get(ctx context.Context, email string) (*User, error) 
 
 	row := m.mc.QueryRow("SELECT * FROM users WHERE email=?", email)
 	if row.Err() == sql.ErrNoRows {
-		return nil, errors.New("no user with provided uuid")
+		return nil, row.Err()
 	}
 	u := &User{}
 	err = row.Scan(&u.UUID, &u.Email, &u.PasswordHash, &u.OrdersQuantity)

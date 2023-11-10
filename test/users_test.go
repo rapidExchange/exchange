@@ -16,7 +16,7 @@ func TestUser(t *testing.T) {
 		return
 	}
 	userRepository := user.NewRepository(mc)
-	u1 := user.New("a", "a@gmail.com", "awfag4319285ygq2h0")
+	u1 := user.New("a@gmail.com", "awfag4319285ygq2h0")
 	err = userRepository.Create(context.Background(), u1)
 	if err != nil {
 		t.Error(err)

@@ -9,7 +9,7 @@ type User struct {
 	OrdersQuantity int
 }
 
-func New(username, email, passwordhash string) *User {
+func New(email, passwordhash string) *User {
 	return &User{
 		UUID:           uuid.New(),
 		Email:          email,
