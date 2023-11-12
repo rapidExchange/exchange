@@ -6,8 +6,10 @@ import (
 
 type Config struct {
 	RedisUser     string `mapstructure:"REDIS_USER"`
+	RedisHost     string `mapstructure:"REDIS_HOST"`
 	RedisPassword string `mapstructure:"REDIS_PASS"`
 	MysqlUser     string `mapstructure:"MYSQL_USER"`
+	MysqlHost     string `mapstructure:"MYSQL_HOST"`
 	MysqlPassword string `mapstructure:"MYSQL_PASSWORD"`
 	MysqlDBName   string `mapstructure:"MYSQL_DBNAME"`
 }

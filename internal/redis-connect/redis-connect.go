@@ -20,7 +20,7 @@ func SetRedisConn() (*redis.Client, error) {
 		return nil, err
 	}
 
-	opt, err := redis.ParseURL(fmt.Sprintf("redis://%s:%s@localhost:6379/1", c.RedisUser, c.RedisPassword))
+	opt, err := redis.ParseURL(fmt.Sprintf("redis://%s:%s@%s:6379/1", c.RedisUser, c.RedisPassword, c.RedisHost))
 	if err != nil {
 		return nil, err
 	}
