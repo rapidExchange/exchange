@@ -7,6 +7,12 @@ type User struct {
 	Email          string
 	PasswordHash   string
 	OrdersQuantity int
+	Balance Balance
+}
+
+// bad solution for store balance
+type Balance struct {
+	balanceSheet map[string]float64
 }
 
 func New(email, passwordhash string) *User {
@@ -15,5 +21,6 @@ func New(email, passwordhash string) *User {
 		Email:          email,
 		PasswordHash:   passwordhash,
 		OrdersQuantity: 0,
+		Balance: Balance{},
 	}
 }
