@@ -8,6 +8,7 @@ var once sync.Once
 type TickerStorage interface {
 	TickerAppend(ticker string, precision int)
 	GetTickers() []string
+	Find(ticker string) bool
 }
 
 // tickerStorage is an implementation of singleton pattern for store all stock tickers
@@ -38,4 +39,16 @@ func (t *tickerStorage) GetTickers() []string {
 	}
 	t.RUnlock()
 	return tickers
+}
+
+// Find returns true if provided ticker is in the stirage, otherwise returns false
+func (t *tickerStorage) Find(ticker string) bool {
+	tickers := t.GetTickers()
+
+	for _, t:= range tickers {
+		if t == ticker {
+			return true
+		}
+	}
+	return false
 }
