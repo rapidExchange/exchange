@@ -27,7 +27,7 @@ func TestUser(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if *u1 != *u2 {
+	if u1.Email != u2.Email || u1.PasswordHash != u2.PasswordHash || u1.UUID != u2.UUID {
 		t.Error(errors.New("users are not equal"))
 		return
 	}

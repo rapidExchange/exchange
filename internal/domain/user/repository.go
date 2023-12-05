@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type Repository interface {
@@ -27,21 +28,45 @@ func (m *mysqlRepository) Create(ctx context.Context, user *User) error {
 	return err
 }
 
+
+//TODO: refactor
 func (m *mysqlRepository) Get(ctx context.Context, email string) (*User, error) {
 	err := m.mc.Ping()
 	if err != nil {
 		return nil, err
 	}
 
-	row := m.mc.QueryRow("SELECT * FROM users WHERE email=?", email)
-	if row.Err() == sql.ErrNoRows {
-		return nil, row.Err()
+	row := m.mc.QueryRowContext(context.Background(), "SELECT * FROM users WHERE email=?", email)
+	if err != nil {
+		if errors.Is(row.Err(), sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
 	}
 	u := &User{}
 	err = row.Scan(&u.UUID, &u.Email, &u.PasswordHash, &u.OrdersQuantity)
 	if err != nil {
 		return nil, err
 	}
+	rows, err := m.mc.QueryContext(context.Background(), "SELECT ticker, quantity FROM balance-sheet WHERE email = ?", email)
+	if err != nil {
+		if errors.Is(row.Err(), sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var ticker string
+	var quantity float64
+	balance := Balance{balanceSheet: make(map[string]float64)}
+	for rows.Next() {
+		err := rows.Scan(&ticker, &quantity)
+		if err != nil {
+			return nil, err
+		}
+		balance.balanceSheet[ticker] = quantity
+	}
+	u.Balance = balance
+
 	return u, err
 }
 
