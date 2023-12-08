@@ -6,8 +6,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"rapidEx/internal/domain/user"
 	"rapidEx/internal/mysql-connect"
+	userrepository "rapidEx/internal/repositories/user-repository"
 )
 
 type loginRequest struct {
@@ -24,7 +24,7 @@ func login(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	userRepository := user.NewRepository(mc)
+	userRepository := userrepository.NewUserRepository(mc)
 	ifReg, err := registerCheck(loginReq.Email, userRepository)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -35,7 +35,7 @@ func login(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-func registerCheck(email string, userRepository user.Repository) (bool, error) {
+func registerCheck(email string, userRepository userrepository.Repository) (bool, error) {
 	_, err := userRepository.Get(context.Background(), email)
 	if err != nil {
 		if err == sql.ErrNoRows {

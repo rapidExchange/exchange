@@ -7,6 +7,7 @@ import (
 
 	"rapidEx/internal/domain/user"
 	mysqlconnect "rapidEx/internal/mysql-connect"
+	userrepository "rapidEx/internal/repositories/user-repository"
 )
 
 func TestUser(t *testing.T) {
@@ -15,7 +16,7 @@ func TestUser(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	userRepository := user.NewRepository(mc)
+	userRepository := userrepository.NewUserRepository(mc)
 	u1 := user.New("a@gmail.com", "awfag4319285ygq2h0")
 	err = userRepository.Create(context.Background(), u1)
 	if err != nil {

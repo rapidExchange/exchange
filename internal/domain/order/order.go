@@ -12,11 +12,12 @@ type Order struct {
 	Ticker    string
 	Quantity  float64
 	Price     float64
-	UserUUID  string
+	Email     string
+	Status    string
 	Type      string // buy or sell(b or s) order type
 }
 
-func New(ticker, UserUUID, Type string, quantity, price float64) (*Order, error) {
+func New(ticker, email, Type string, quantity, price float64) (*Order, error) {
 	typeCheck := Type == "b" || Type == "s"
 	if !typeCheck {
 		return nil, errors.New("unsopported order type")
@@ -24,9 +25,10 @@ func New(ticker, UserUUID, Type string, quantity, price float64) (*Order, error)
 	return &Order{
 		OrderUUID: uuid.New(),
 		Ticker:    ticker,
-		UserUUID:  UserUUID,
+		Email:     email,
 		Quantity:  quantity,
 		Price:     price,
+		Status: "new",
 		Type:      Type}, nil
 }
 

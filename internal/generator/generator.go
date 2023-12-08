@@ -8,8 +8,9 @@ import (
 
 	"rapidEx/internal/domain/order"
 	"rapidEx/internal/domain/stock"
-	"rapidEx/internal/tickerStorage"
 	"rapidEx/internal/redis-connect"
+	stockrepository "rapidEx/internal/repositories/stock-repository"
+	"rapidEx/internal/tickerStorage"
 )
 
 type Generator struct {
@@ -52,7 +53,7 @@ func (g Generator) GenerateForAll() {
 			continue
 		}
 
-		stockRepository := stock.NewRepository(redisClient)
+		stockRepository := stockrepository.NewStockRepository(redisClient)
 
 		ctx := context.Background()
 

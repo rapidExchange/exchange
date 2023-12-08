@@ -1,25 +1,26 @@
-package order
+package orderrepository
 
 import (
 	"context"
 	"errors"
 	"log"
+	"rapidEx/internal/domain/order"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
 type Repository interface {
-	Set(ctx context.Context, order *Order) error
-	GetAll(ctx context.Context) ([]*Order, error)
-	Del(ctx context.Context, order *Order) error
+	Set(ctx context.Context, order *order.Order) error
+	GetAll(ctx context.Context) ([]*order.Order, error)
+	Del(ctx context.Context, order *order.Order) error
 }
 
 type rsClient struct {
 	rc *redis.Client
 }
 
-func (r *rsClient) Set(ctx context.Context, order *Order) error {
+func (r *rsClient) Set(ctx context.Context, order *order.Order) error {
 	status := r.rc.HSet(ctx, "orders", uuid.New().String(), order)
 	if status.Err() != nil {
 		return status.Err()
@@ -28,7 +29,7 @@ func (r *rsClient) Set(ctx context.Context, order *Order) error {
 	return nil
 }
 
-func (r *rsClient) GetAll(ctx context.Context) ([]*Order, error) {
+func (r *rsClient) GetAll(ctx context.Context) ([]*order.Order, error) {
 	stringCmd := r.rc.HGetAll(ctx, "orders")
 
 	switch {
@@ -42,9 +43,9 @@ func (r *rsClient) GetAll(ctx context.Context) ([]*Order, error) {
 	if err != nil {
 		return nil, err
 	}
-	orders := make([]*Order, 0)
+	orders := make([]*order.Order, 0)
 	for _, v := range result {
-		var o Order
+		var o order.Order
 		err := o.UnmarshalBinary([]byte(v))
 		if err != nil {
 			return nil, err
@@ -55,7 +56,7 @@ func (r *rsClient) GetAll(ctx context.Context) ([]*Order, error) {
 	return orders, nil
 }
 
-func (r *rsClient) Del(ctx context.Context, order *Order) error {
+func (r *rsClient) Del(ctx context.Context, order *order.Order) error {
 	intCmd := r.rc.HDel(ctx, "orders", order.OrderUUID.String())
 	log.Println(intCmd.Result())
 
@@ -66,6 +67,6 @@ func (r *rsClient) Del(ctx context.Context, order *Order) error {
 	return nil
 }
 
-func NewRepository(rc *redis.Client) Repository {
+func NewOrderRepository(rc *redis.Client) Repository {
 	return &rsClient{rc: rc}
 }

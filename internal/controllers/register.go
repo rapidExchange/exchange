@@ -8,6 +8,7 @@ import (
 
 	"rapidEx/internal/domain/user"
 	mysqlconnect "rapidEx/internal/mysql-connect"
+	userrepository "rapidEx/internal/repositories/user-repository"
 )
 
 type registerRequest struct {
@@ -25,7 +26,7 @@ func register(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	userRepository := user.NewRepository(mc)
+	userRepository := userrepository.NewUserRepository(mc)
 	b, err := registerCheck(registerReq.Email, userRepository)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)

@@ -12,6 +12,7 @@ import (
 
 	"rapidEx/internal/domain/stock"
 	redisconnect "rapidEx/internal/redis-connect"
+	stockrepository "rapidEx/internal/repositories/stock-repository"
 	stockPriceProcessor "rapidEx/internal/stock-price-processor"
 	tickerstorage "rapidEx/internal/tickerStorage"
 )
@@ -71,7 +72,7 @@ func setStock(ticker string, price float64) error {
 	if err != nil {
 		return err
 	}
-	stockRepository := stock.NewRepository(redisClient)
+	stockRepository := stockrepository.NewStockRepository(redisClient)
 	err = stockRepository.Set(context.Background(), *Stock)
 
 	return err

@@ -1,9 +1,10 @@
-package stock
+package stockrepository
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
+	"rapidEx/internal/domain/stock"
 	"strconv"
 	"time"
 
@@ -17,7 +18,7 @@ type StockModify struct {
 	Sell   map[string]string
 }
 
-func NewStockMapString(s Stock) *StockModify {
+func NewStockMapString(s stock.Stock) *StockModify {
 	var sMap StockModify
 	sMap.Ticker = s.Ticker
 	sMap.Price = s.Price
@@ -39,8 +40,8 @@ func UnmarshalBinary(data []byte) (*StockModify, error) {
 //TODO: handle errors
 
 type Repository interface {
-	Set(ctx context.Context, stock Stock) error
-	Get(ctx context.Context, ticker string) (*Stock, error)
+	Set(ctx context.Context, stock stock.Stock) error
+	Get(ctx context.Context, ticker string) (*stock.Stock, error)
 	Del(ctx context.Context, ticker string) error
 }
 
@@ -49,7 +50,7 @@ type rsClient struct {
 	rc *redis.Client
 }
 
-func (r *rsClient) Set(ctx context.Context, stock Stock) error {
+func (r *rsClient) Set(ctx context.Context, stock stock.Stock) error {
 	stockMapString := NewStockMapString(stock)
 	status := r.rc.Set(ctx, stock.Ticker, stockMapString, time.Second*1000)
 	if status.Err() != nil {
@@ -58,7 +59,7 @@ func (r *rsClient) Set(ctx context.Context, stock Stock) error {
 	return nil
 }
 
-func (r *rsClient) Get(ctx context.Context, ticker string) (*Stock, error) {
+func (r *rsClient) Get(ctx context.Context, ticker string) (*stock.Stock, error) {
 	rStockMapString := r.rc.Get(ctx, ticker)
 	switch {
 	case rStockMapString.Err() == redis.Nil:
@@ -67,7 +68,7 @@ func (r *rsClient) Get(ctx context.Context, ticker string) (*Stock, error) {
 		return nil, rStockMapString.Err()
 	}
 
-	var s Stock
+	var s stock.Stock
 
 	sStockWrap, err := rStockMapString.Result()
 	if err != nil {
@@ -106,7 +107,7 @@ func (r *rsClient) Del(ctx context.Context, ticker string) error {
 	return nil
 }
 
-func NewRepository(rc *redis.Client) Repository {
+func NewStockRepository(rc *redis.Client) Repository {
 	return &rsClient{rc: rc}
 }
 

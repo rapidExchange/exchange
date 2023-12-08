@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"rapidEx/internal/domain/stock"
 	redisconnect "rapidEx/internal/redis-connect"
+	stockrepository "rapidEx/internal/repositories/stock-repository"
 	tickerstorage "rapidEx/internal/tickerStorage"
 
 	"github.com/gofiber/contrib/websocket"
@@ -36,13 +36,13 @@ func GetStock(c *websocket.Conn) {
 		log.Println(fmt.Errorf("%s: %w", op, err))
 		return
 	}
-	stockRepository := stock.NewRepository(redisConneciton)
+	stockRepository := stockrepository.NewStockRepository(redisConneciton)
 	s, err := stockRepository.Get(context.Background(), ticker)
 	if err != nil {
 		log.Println(fmt.Errorf("%s: %w", op, err))
 		return
 	}
-	stockModify := stock.NewStockMapString(*s)
+	stockModify := stockrepository.NewStockMapString(*s)
 	c.WriteJSON(stockModify)
 }
 

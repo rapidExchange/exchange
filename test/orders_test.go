@@ -4,6 +4,7 @@ import (
 	"context"
 	"rapidEx/internal/domain/order"
 	redisconnect "rapidEx/internal/redis-connect"
+	orderrepository "rapidEx/internal/repositories/order-repository"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func TestOrder(t *testing.T) {
 		t.Error(err)
 	}
 
-	orderRepository := order.NewRepository(rc)
+	orderRepository := orderrepository.NewOrderRepository(rc)
 
 	err = orderRepository.Set(context.Background(), order1)
 	if err != nil {
