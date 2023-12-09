@@ -68,12 +68,9 @@ func getBinancePrice(symbol string) (float64, error) {
 
 func setStock(ticker string, price float64) error {
 	Stock := stock.New(ticker, price)
-	redisClient, err := redisconnect.SetRedisConn()
-	if err != nil {
-		return err
-	}
+	redisClient := redisconnect.MustConnect()
 	stockRepository := stockrepository.NewStockRepository(redisClient)
-	err = stockRepository.Set(context.Background(), *Stock)
+	err := stockRepository.Set(context.Background(), *Stock)
 
 	return err
 }

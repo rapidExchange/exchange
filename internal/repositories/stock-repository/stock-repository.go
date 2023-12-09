@@ -58,12 +58,12 @@ func (r *rsClient) Set(ctx context.Context, stock stock.Stock) error {
 	}
 	return nil
 }
-
+//TODO: take out stock not found error
 func (r *rsClient) Get(ctx context.Context, ticker string) (*stock.Stock, error) {
 	rStockMapString := r.rc.Get(ctx, ticker)
 	switch {
-	case rStockMapString.Err() == redis.Nil:
-		return nil, errors.New("Stock not found")
+	case errors.Is(rStockMapString.Err(), redis.Nil):
+		return nil, errors.New("stockNotFound")
 	case rStockMapString.Err() != nil:
 		return nil, rStockMapString.Err()
 	}

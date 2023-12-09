@@ -32,12 +32,9 @@ func NewOrder(c *fiber.Ctx) error {
 		log.Println(fmt.Errorf("%s: %w", op, err))
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
-	redisClient, err := redisconnect.SetRedisConn()
-	if err != nil {
-		log.Println(fmt.Errorf("%s: %w", op, err))
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
+	redisClient := redisconnect.MustConnect()
 	orderRepository := orderrepository.NewOrderRepository(redisClient)
+	order.Status = "processing"
 	err = orderRepository.Set(context.Background(), order)
 	if err != nil {
 		log.Println(fmt.Errorf("%s: %w", op, err))

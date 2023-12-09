@@ -10,7 +10,7 @@ import (
 	"rapidEx/config"
 )
 
-func SetMysqlConnection() (*sql.DB, error) {
+func setMysqlConnection() (*sql.DB, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -20,4 +20,12 @@ func SetMysqlConnection() (*sql.DB, error) {
 		return nil, err
 	}
 	return sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", c.MysqlUser,c.MysqlHost ,c.MysqlPassword, c.MysqlDBName))
+}
+
+func MustConnect() *sql.DB {
+	mc, err := setMysqlConnection()
+	if err != nil {
+		panic(err)
+	}
+	return mc
 }

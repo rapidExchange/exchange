@@ -22,10 +22,7 @@ func register(c *fiber.Ctx) error {
 		log.Println(err)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
-	mc, err := mysqlconnect.SetMysqlConnection()
-	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
+	mc := mysqlconnect.MustConnect()
 	userRepository := userrepository.NewUserRepository(mc)
 	b, err := registerCheck(registerReq.Email, userRepository)
 	if err != nil {

@@ -31,11 +31,7 @@ func GetStock(c *websocket.Conn) {
 		log.Printf("Undefined ticker: %s", ticker)
 	}
 
-	redisConneciton, err := redisconnect.SetRedisConn()
-	if err != nil {
-		log.Println(fmt.Errorf("%s: %w", op, err))
-		return
-	}
+	redisConneciton := redisconnect.MustConnect()
 	stockRepository := stockrepository.NewStockRepository(redisConneciton)
 	s, err := stockRepository.Get(context.Background(), ticker)
 	if err != nil {

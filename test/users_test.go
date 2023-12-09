@@ -11,14 +11,10 @@ import (
 )
 
 func TestUser(t *testing.T) {
-	mc, err := mysqlconnect.SetMysqlConnection()
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	mc := mysqlconnect.MustConnect()
 	userRepository := userrepository.NewUserRepository(mc)
 	u1 := user.New("a@gmail.com", "awfag4319285ygq2h0")
-	err = userRepository.Create(context.Background(), u1)
+	err := userRepository.Create(context.Background(), u1)
 	if err != nil {
 		t.Error(err)
 		return

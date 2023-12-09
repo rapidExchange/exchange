@@ -74,10 +74,7 @@ func (proc *stockPriceProcessor) UpdatePrices() {
 }
 
 func (proc *stockPriceProcessor) UpdatePrice(ticker string) error {
-	redisClient, err := redisconnect.SetRedisConn()
-	if err != nil {
-		return err
-	}
+	redisClient := redisconnect.MustConnect()
 	sRep := stockrepository.NewStockRepository(redisClient)
 	ctx := context.Background()
 

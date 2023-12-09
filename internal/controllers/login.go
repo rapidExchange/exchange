@@ -20,10 +20,7 @@ func login(c *fiber.Ctx) error {
 	if err := c.BodyParser(&loginReq); err != nil {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
-	mc, err := mysqlconnect.SetMysqlConnection()
-	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
+	mc := mysqlconnect.MustConnect()
 	userRepository := userrepository.NewUserRepository(mc)
 	ifReg, err := registerCheck(loginReq.Email, userRepository)
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func SetRedisConn() (*redis.Client, error) {
+func setRedisConn() (*redis.Client, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -26,4 +26,12 @@ func SetRedisConn() (*redis.Client, error) {
 	}
 
 	return redis.NewClient(opt), nil
+}
+
+func MustConnect() (*redis.Client) {
+	redisConnection, err := setRedisConn()
+	if err != nil {
+		panic(err)
+	}
+	return redisConnection
 }

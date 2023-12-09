@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"fmt"
 	"rapidEx/internal/domain/order"
 
 	"github.com/google/uuid"
@@ -21,34 +22,38 @@ type rsClient struct {
 }
 
 func (r *rsClient) Set(ctx context.Context, order *order.Order) error {
+	const op = "orderRepository.Set"
+
 	status := r.rc.HSet(ctx, "orders", uuid.New().String(), order)
 	if status.Err() != nil {
-		return status.Err()
+		return fmt.Errorf("%s: %w", op, status.Err())
 	}
 
 	return nil
 }
 
 func (r *rsClient) GetAll(ctx context.Context) ([]*order.Order, error) {
+	const op = "orderRepository.GetAll"
+
 	stringCmd := r.rc.HGetAll(ctx, "orders")
 
 	switch {
 	case stringCmd.Err() == redis.Nil:
 		return nil, errors.New("orders not found")
 	case stringCmd.Err() != nil:
-		return nil, stringCmd.Err()
+		return nil, fmt.Errorf("%s: %w", op, stringCmd.Err())
 	}
 
 	result, err := stringCmd.Result()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	orders := make([]*order.Order, 0)
 	for _, v := range result {
 		var o order.Order
 		err := o.UnmarshalBinary([]byte(v))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 
 		orders = append(orders, &o)

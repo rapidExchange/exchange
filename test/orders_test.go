@@ -14,10 +14,7 @@ func TestOrder(t *testing.T) {
 		t.Error(err)
 	}
 
-	rc, err := redisconnect.SetRedisConn()
-	if err != nil {
-		t.Error(err)
-	}
+	rc := redisconnect.MustConnect()
 
 	orderRepository := orderrepository.NewOrderRepository(rc)
 

@@ -47,11 +47,7 @@ func (g Generator) GenerateForAll() {
 		log.Println("Waiting stocks for orders generate")
 	}
 	for _, ticker := range tickers {
-		redisClient, err := redisconnect.SetRedisConn()
-		if err != nil {
-			log.Println(err)
-			continue
-		}
+		redisClient := redisconnect.MustConnect()
 
 		stockRepository := stockrepository.NewStockRepository(redisClient)
 
