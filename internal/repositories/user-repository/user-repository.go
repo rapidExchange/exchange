@@ -41,7 +41,7 @@ func (m *mysqlRepository) Get(ctx context.Context, email string) (*user.User, er
 	row := m.mc.QueryRowContext(context.Background(), "SELECT * FROM users WHERE email=?", email)
 	if err != nil {
 		if errors.Is(row.Err(), sql.ErrNoRows) {
-			return nil, errors.New("User Not Found")
+			return nil, errors.New("userNotFound")
 		}
 		return nil, err
 	}
@@ -77,7 +77,20 @@ func (m *mysqlRepository) Update(ctx context.Context, user *user.User) error {
 		return err
 	}
 
-	_, err = m.mc.ExecContext(context.Background(), "UPDATE users SET password_hash=? WHERE email=?", user.PasswordHash, user.Email)
+	_, err = m.mc.ExecContext(context.Background(),
+	"UPDATE users SET password_hash=? WHERE email=?",
+	user.PasswordHash, user.Email)
+	for ticker, quantity := range user.Balance {
+	_, err = m.mc.ExecContext(context.Background(),
+	`IF EXISTS (SELECT ticker FROM balance-sheet WHERE(email=? AND ticker=?))
+	BEGIN
+		UPDATE balance-sheet SET quantity=? WHERE(email=? AND ticker=?)
+	END
+	ELSE
+	BEGIN
+		INSERT INTO balance-sheet(email, ticker, quantity) VALUES(?, ?, ?)`,
+		 user.Email, ticker, quantity, user.Email, ticker, user.Email, ticker, quantity)
+	}
 	return err
 }
 
