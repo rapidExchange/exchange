@@ -3,11 +3,10 @@ package orderrepository
 import (
 	"context"
 	"errors"
-	"log"
 	"fmt"
+	"log"
 	"rapidEx/internal/domain/order"
 
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -24,7 +23,7 @@ type rsClient struct {
 func (r *rsClient) Set(ctx context.Context, order *order.Order) error {
 	const op = "orderRepository.Set"
 
-	status := r.rc.HSet(ctx, "orders", uuid.New().String(), order)
+	status := r.rc.HSet(ctx, "orders", order.OrderUUID.String(), order)
 	if status.Err() != nil {
 		return fmt.Errorf("%s: %w", op, status.Err())
 	}

@@ -28,7 +28,7 @@ func setRedisConn() (*redis.Client, error) {
 	return redis.NewClient(opt), nil
 }
 
-func MustConnect() (*redis.Client) {
+func MustConnect() *redis.Client {
 	redisConnection, err := setRedisConn()
 	if err != nil {
 		panic(err)

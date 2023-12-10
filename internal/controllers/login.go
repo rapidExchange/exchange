@@ -27,7 +27,7 @@ func login(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	if !ifReg {
-		return c.SendStatus(fiber.StatusNoContent)
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 	return c.SendStatus(fiber.StatusOK)
 }

@@ -11,6 +11,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+var (
+	ErrUserNotFound = errors.New("user not found")
+)
+
 type StockModify struct {
 	Ticker string
 	Price  float64
@@ -37,15 +41,12 @@ func UnmarshalBinary(data []byte) (*StockModify, error) {
 	return &s, err
 }
 
-//TODO: handle errors
-
 type Repository interface {
 	Set(ctx context.Context, stock stock.Stock) error
 	Get(ctx context.Context, ticker string) (*stock.Stock, error)
 	Del(ctx context.Context, ticker string) error
 }
 
-// Redis client
 type rsClient struct {
 	rc *redis.Client
 }
@@ -58,12 +59,12 @@ func (r *rsClient) Set(ctx context.Context, stock stock.Stock) error {
 	}
 	return nil
 }
-//TODO: take out stock not found error
+
 func (r *rsClient) Get(ctx context.Context, ticker string) (*stock.Stock, error) {
 	rStockMapString := r.rc.Get(ctx, ticker)
 	switch {
 	case errors.Is(rStockMapString.Err(), redis.Nil):
-		return nil, errors.New("stockNotFound")
+		return nil, ErrUserNotFound
 	case rStockMapString.Err() != nil:
 		return nil, rStockMapString.Err()
 	}
