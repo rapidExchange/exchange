@@ -12,11 +12,11 @@ import (
 	stockrepository "rapidEx/internal/repositories/stock-repository"
 )
 
-type DealsProcessor struct {
+type dealsProcessor struct {
 }
 
 // TODO: add order in order history & update user balance-sheet
-func Do() {
+func (d *dealsProcessor)Do() {
 	orders, err := getAllOrders()
 	stockRepository := stockrepository.NewStockRepository(redisconnect.MustConnect())
 	if err != nil {
@@ -37,6 +37,10 @@ func Do() {
 				if err != nil {
 					panic(fmt.Sprint("deals-processor: ", err))
 				}
+				orderRepository := orderrepository.NewOrderRepository(redisconnect.MustConnect())
+				order.Status = "completed"
+				//TODO send order to mysql order table
+				orderRepository.Del(context.Background(), order)
 			}
 		}
 
@@ -45,9 +49,9 @@ func Do() {
 
 func processOrder(order *order.Order, stock *stock.Stock) bool {
 	switch {
-	case order.Type == "buy" && stock.Price >= stock.Price:
+	case order.Type == "b" && stock.Price >= stock.Price:
 		return processBuyOrder(order, stock)
-	case order.Type == "sell" && stock.Price <= stock.Price:
+	case order.Type == "s" && stock.Price <= stock.Price:
 		return processSellOrder(order, stock)
 	}
 	return false
@@ -79,6 +83,6 @@ func getAllOrders() ([]*order.Order, error) {
 	return orderRepository.GetAll(context.Background())
 }
 
-func New() *DealsProcessor {
-	return &DealsProcessor{}
+func New() *dealsProcessor {
+	return &dealsProcessor{}
 }

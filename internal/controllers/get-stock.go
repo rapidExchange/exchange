@@ -29,6 +29,7 @@ func GetStock(c *websocket.Conn) {
 	storage := tickerstorage.GetInstanse()
 	if !storage.Find(ticker) {
 		log.Printf("Undefined ticker: %s", ticker)
+		return
 	}
 
 	redisConneciton := redisconnect.MustConnect()

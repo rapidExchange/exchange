@@ -7,6 +7,7 @@ import (
 	"os"
 	"rapidEx/config"
 	"rapidEx/internal/controllers"
+	dealsprocessor "rapidEx/internal/deals-processor"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -55,10 +56,12 @@ func (a *app) Do() {
 	go func() {
 		gen := generator.New()
 		sProcessor := stockPriceProcessor.New()
+		dProcessor := dealsprocessor.New()
 		for {
 			time.Sleep(time.Second * 1)
 			gen.GenerateForAll()
 			sProcessor.UpdatePrices()
+			dProcessor.Do()
 		}
 	}()
 }
@@ -68,5 +71,5 @@ func (a *app) ListenAndServe() {
 
 	controllers.RegisterRoutes(fiberApp)
 
-	log.Fatal(fiberApp.Listen(":8080"))
+	log.Fatal(fiberApp.Listen(":2345"))
 }

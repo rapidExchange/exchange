@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,6 +18,7 @@ type registerRequest struct {
 }
 
 func register(c *fiber.Ctx) error {
+	const op = "controllers.register"
 	registerReq := new(registerRequest)
 	if err := c.BodyParser(&registerReq); err != nil {
 		log.Println(err)
@@ -26,6 +28,7 @@ func register(c *fiber.Ctx) error {
 	userRepository := userrepository.NewUserRepository(mc)
 	b, err := registerCheck(registerReq.Email, userRepository)
 	if err != nil {
+		log.Println(fmt.Errorf("%s: %w", op, err))
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	if b {
@@ -34,6 +37,7 @@ func register(c *fiber.Ctx) error {
 	usr := user.New(registerReq.Email, registerReq.PasswordHash)
 	err = userRepository.Create(context.Background(), usr)
 	if err != nil {
+		log.Println(fmt.Errorf("%s: %w", op, err))
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	return c.SendStatus(fiber.StatusOK)
