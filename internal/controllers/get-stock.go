@@ -7,6 +7,8 @@ import (
 	redisconnect "rapidEx/internal/redis-connect"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
 	tickerstorage "rapidEx/internal/tickerStorage"
+	"strings"
+	"time"
 
 	"github.com/gofiber/contrib/websocket"
 )
@@ -20,7 +22,7 @@ func GetStock(c *websocket.Conn) {
 		}
 		log.Printf("WS conneciton closed")
 	}()
-	ticker := c.Params("stock")
+	ticker := strings.ReplaceAll(c.Params("ticker"), "_", "/")
 
 	if !validateStock(ticker) {
 		log.Println("Empty stockname")
@@ -34,15 +36,18 @@ func GetStock(c *websocket.Conn) {
 
 	redisConneciton := redisconnect.MustConnect()
 	stockRepository := stockrepository.NewStockRepository(redisConneciton)
+	for {
 	s, err := stockRepository.Get(context.Background(), ticker)
 	if err != nil {
 		log.Println(fmt.Errorf("%s: %w", op, err))
-		return
+		continue
 	}
 	stockModify := stockrepository.NewStockMapString(*s)
 	c.WriteJSON(stockModify)
+	time.Sleep(time.Second)
+}
 }
 
 func validateStock(stock string) bool {
-	return stock == ""
+	return stock != ""
 }

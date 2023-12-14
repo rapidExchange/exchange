@@ -16,10 +16,10 @@ var (
 )
 
 type StockModify struct {
-	Ticker string
-	Price  float64
-	Buy    map[string]string
-	Sell   map[string]string
+	Ticker string            `json:"ticker"`
+	Price  float64           `json:"price"`
+	Buy    map[string]string `json:"stockBookBuy"`
+	Sell   map[string]string `json:"stockBookSell"` 
 }
 
 func NewStockMapString(s stock.Stock) *StockModify {
