@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"log"
-	"math"
 	stockBook "rapidEx/internal/domain/stock-book"
 	redisconnect "rapidEx/internal/redis-connect"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
 	tickerstorage "rapidEx/internal/tickerStorage"
+	"rapidEx/internal/utils"
 	"strings"
 )
 
@@ -49,12 +49,6 @@ func (proc *stockPriceProcessor) MeanWeight(stockBook stockBook.StockBook) (floa
 	return meanw, err
 }
 
-func (proc *stockPriceProcessor) Round(x float64, prec int) float64 {
-	pow := math.Pow10(prec)
-	rounded := math.Floor(x * pow)
-	return rounded / pow
-}
-
 func (proc *stockPriceProcessor) PreciseAs(s string) int {
 	st := strings.TrimRight(strings.Split(s, ".")[1], "0")
 	return len(st)
@@ -86,9 +80,14 @@ func (proc *stockPriceProcessor) UpdatePrice(ticker string) error {
 	if err != nil {
 		return err
 	}
-	stock.Price = price
+	tickerStorage := tickerstorage.GetInstanse()
+	prec, ok := tickerStorage.Get(ticker)
+	if !ok {
+		log.Println("Undefined ticker in tickerstorage: ", ticker)
+	}
+	stock.Price = utils.Round(price, prec)
 
-	log.Printf("New price of %s : %.20f", ticker, stock.Price)
+	log.Printf("New price of %s : %f", ticker, stock.Price)
 
 	err = sRep.Set(ctx, *stock)
 	return err

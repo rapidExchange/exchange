@@ -9,6 +9,7 @@ type TickerStorage interface {
 	TickerAppend(ticker string, precision int)
 	GetTickers() []string
 	Find(ticker string) bool
+	Get(ticker string) (int, bool)
 }
 
 // tickerStorage is an implementation of singleton pattern for store all stock tickers
@@ -51,4 +52,9 @@ func (t *tickerStorage) Find(ticker string) bool {
 		}
 	}
 	return false
+}
+
+func(t *tickerStorage) Get(ticker string) (int, bool) {
+	prec, ok := t.TickersPrecision[ticker]
+	return prec, ok
 }

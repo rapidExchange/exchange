@@ -17,6 +17,7 @@ import (
 	stockrepository "rapidEx/internal/repositories/stock-repository"
 	stockPriceProcessor "rapidEx/internal/stock-price-processor"
 	tickerstorage "rapidEx/internal/tickerStorage"
+	"rapidEx/internal/utils"
 )
 
 type getTickerPriceBinanceRequest struct {
@@ -43,7 +44,7 @@ func addStock(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	precision := getPrecision(price)
-	roundedPrice := roundWithPrecision(price)
+	roundedPrice := utils.Round(price, precision)
 	ticker := createTicker(getPriceBinanceRequest.FirstSymbol, getPriceBinanceRequest.SecondSymbol)
 	err = setStock(ticker, roundedPrice)
 	if err != nil {
@@ -100,12 +101,6 @@ func unmarshalToBinanceResponse(response []byte) (*getTickerPriceBinanceResponse
 		return nil, err
 	}
 	return binanceResponse, nil
-}
-
-func roundWithPrecision(price float64) float64 {
-	priceProcessor := stockPriceProcessor.New()
-	precision := getPrecision(price)
-	return priceProcessor.Round(price, precision)
 }
 
 func getPrecision(price float64) int {

@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -35,7 +36,7 @@ func login(c *fiber.Ctx) error {
 func registerCheck(email string, userRepository userrepository.Repository) (bool, error) {
 	_, err := userRepository.Get(context.Background(), email)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
 		return false, err
