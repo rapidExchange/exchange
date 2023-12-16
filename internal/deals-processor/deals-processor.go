@@ -27,6 +27,8 @@ func (d *dealsProcessor)Do() {
 		stock, err := stockRepository.Get(context.Background(), order.Ticker)
 		if errors.Is(err, stockrepository.ErrUserNotFound) {
 			log.Printf("Stock: %s not found\n", order.Ticker)
+			order.Status = "unable"
+			continue
 		}
 
 		if order.Status == "processing" {
