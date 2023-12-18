@@ -9,7 +9,7 @@ services:
     volumes:
       - './app.env:/app.env:ro'
     ports:
-      - '8080:8080'
+      - '2345:2345'
     depends_on:
       - mysql
       - redis

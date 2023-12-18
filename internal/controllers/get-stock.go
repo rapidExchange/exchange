@@ -18,7 +18,7 @@ type getStockWS struct {
 	Price     float64           `json:"price"`
 	Buy       map[string]string `json:"stockBookBuy"`
 	Sell      map[string]string `json:"stockBookSell"`
-	Precision int               `json:"precisoion"`
+	Precision int               `json:"precision"`
 }
 
 func GetStock(c *websocket.Conn) {

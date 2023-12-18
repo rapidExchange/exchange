@@ -51,9 +51,9 @@ func (d *dealsProcessor)Do() {
 
 func processOrder(order *order.Order, stock *stock.Stock) bool {
 	switch {
-	case order.Type == "b" && stock.Price >= stock.Price:
+	case order.Type == "b" && stock.Price <= order.Price:
 		return processBuyOrder(order, stock)
-	case order.Type == "s" && stock.Price <= stock.Price:
+	case order.Type == "s" && stock.Price >= order.Price:
 		return processSellOrder(order, stock)
 	}
 	return false
@@ -61,8 +61,8 @@ func processOrder(order *order.Order, stock *stock.Stock) bool {
 
 func processBuyOrder(order *order.Order, stock *stock.Stock) bool {
 	for price, quantity := range stock.Stockbook.Sell {
-		if order.Price <= price && order.Quantity <= quantity {
-			stock.Stockbook.Buy[price] -= order.Quantity
+		if order.Price >= price && order.Quantity <= quantity {
+			stock.Stockbook.Sell[price] -= order.Quantity
 			return true
 		}
 	}
@@ -70,8 +70,8 @@ func processBuyOrder(order *order.Order, stock *stock.Stock) bool {
 }
 
 func processSellOrder(order *order.Order, stock *stock.Stock) bool {
-	for price, quantity := range stock.Stockbook.Sell {
-		if order.Price >= price && order.Quantity <= quantity {
+	for price, quantity := range stock.Stockbook.Buy {
+		if order.Price <= price && order.Quantity <= quantity {
 			stock.Stockbook.Buy[price] -= order.Quantity
 			return true
 		}
