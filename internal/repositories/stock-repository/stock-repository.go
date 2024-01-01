@@ -5,15 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"rapidEx/internal/domain/stock"
+	"rapidEx/internal/storage"
 	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-var (
-	ErrUserNotFound = errors.New("user not found")
-)
 
 type StockModify struct {
 	Ticker string            `json:"ticker"`
@@ -64,7 +62,7 @@ func (r *rsClient) Get(ctx context.Context, ticker string) (*stock.Stock, error)
 	rStockMapString := r.rc.Get(ctx, ticker)
 	switch {
 	case errors.Is(rStockMapString.Err(), redis.Nil):
-		return nil, ErrUserNotFound
+		return nil, storage.ErrStockNotFound
 	case rStockMapString.Err() != nil:
 		return nil, rStockMapString.Err()
 	}

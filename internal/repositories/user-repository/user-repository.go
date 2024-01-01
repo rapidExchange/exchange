@@ -14,8 +14,6 @@ type Repository interface {
 	Delete(ctx context.Context, email string) error
 }
 
-var ErrUserNotFound = errors.New("user not found")
-
 type mysqlRepository struct {
 	mc *sql.DB
 }
@@ -78,18 +76,18 @@ func (m *mysqlRepository) Update(ctx context.Context, user *user.User) error {
 	}
 
 	_, err = m.mc.ExecContext(context.Background(),
-	"UPDATE users SET password_hash=? WHERE email=?",
-	user.PasswordHash, user.Email)
+		"UPDATE users SET password_hash=? WHERE email=?",
+		user.PasswordHash, user.Email)
 	for ticker, quantity := range user.Balance {
-	_, err = m.mc.ExecContext(context.Background(),
-	`IF EXISTS (SELECT ticker FROM balance WHERE(email=? AND ticker=?))
+		_, err = m.mc.ExecContext(context.Background(),
+			`IF EXISTS (SELECT ticker FROM balance WHERE(email=? AND ticker=?))
 	BEGIN
 		UPDATE balance SET quantity=? WHERE(email=? AND ticker=?)
 	END
 	ELSE
 	BEGIN
 		INSERT INTO balance(email, ticker, quantity) VALUES(?, ?, ?)`,
-		 user.Email, ticker, quantity, user.Email, ticker, user.Email, ticker, quantity)
+			user.Email, ticker, quantity, user.Email, ticker, user.Email, ticker, quantity)
 	}
 	return err
 }
