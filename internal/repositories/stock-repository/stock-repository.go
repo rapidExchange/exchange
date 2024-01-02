@@ -40,8 +40,8 @@ func UnmarshalBinary(data []byte) (*StockModify, error) {
 }
 
 type Repository interface {
-	Set(ctx context.Context, stock stock.Stock) error
-	Get(ctx context.Context, ticker string) (*stock.Stock, error)
+	Set(ctx context.Context, stock *stock.Stock) error
+	Stock(ctx context.Context, ticker string) (*stock.Stock, error)
 	Del(ctx context.Context, ticker string) error
 }
 
@@ -49,8 +49,8 @@ type rsClient struct {
 	rc *redis.Client
 }
 
-func (r *rsClient) Set(ctx context.Context, stock stock.Stock) error {
-	stockMapString := NewStockMapString(stock)
+func (r *rsClient) Set(ctx context.Context, stock *stock.Stock) error {
+	stockMapString := NewStockMapString(*stock)
 	status := r.rc.Set(ctx, stock.Ticker, stockMapString, time.Second*1000)
 	if status.Err() != nil {
 		return status.Err()
@@ -58,7 +58,7 @@ func (r *rsClient) Set(ctx context.Context, stock stock.Stock) error {
 	return nil
 }
 
-func (r *rsClient) Get(ctx context.Context, ticker string) (*stock.Stock, error) {
+func (r *rsClient) Stock(ctx context.Context, ticker string) (*stock.Stock, error) {
 	rStockMapString := r.rc.Get(ctx, ticker)
 	switch {
 	case errors.Is(rStockMapString.Err(), redis.Nil):

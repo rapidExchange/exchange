@@ -13,7 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"rapidEx/internal/domain/stock"
-	redisconnect "rapidEx/internal/redis-connect"
+	redisconnect "rapidEx/internal/redis"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
 	stockPriceProcessor "rapidEx/internal/stock-price-processor"
 	tickerstorage "rapidEx/internal/tickerStorage"
@@ -77,7 +77,7 @@ func setStock(ticker string, price float64) error {
 	Stock := stock.New(ticker, price)
 	redisClient := redisconnect.MustConnect()
 	stockRepository := stockrepository.NewStockRepository(redisClient)
-	err := stockRepository.Set(context.Background(), *Stock)
+	err := stockRepository.Set(context.Background(), Stock)
 
 	return err
 }

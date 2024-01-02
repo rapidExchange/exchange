@@ -5,7 +5,7 @@ import (
 	"errors"
 	"log"
 	stockBook "rapidEx/internal/domain/stock-book"
-	redisconnect "rapidEx/internal/redis-connect"
+	redisconnect "rapidEx/internal/redis"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
 	tickerstorage "rapidEx/internal/tickerStorage"
 	"rapidEx/internal/utils"
@@ -72,7 +72,7 @@ func (proc *stockPriceProcessor) UpdatePrice(ticker string) error {
 	sRep := stockrepository.NewStockRepository(redisClient)
 	ctx := context.Background()
 
-	stock, err := sRep.Get(ctx, ticker)
+	stock, err := sRep.Stock(ctx, ticker)
 	if err != nil {
 		return err
 	}

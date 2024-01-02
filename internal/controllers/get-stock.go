@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	redisconnect "rapidEx/internal/redis-connect"
+	"log/slog"
+	redisconnect "rapidEx/internal/redis"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
+	"rapidEx/internal/services/stock"
 	tickerstorage "rapidEx/internal/tickerStorage"
 	"strings"
 	"time"
@@ -46,8 +48,10 @@ func GetStock(c *websocket.Conn) {
 
 	redisConneciton := redisconnect.MustConnect()
 	stockRepository := stockrepository.NewStockRepository(redisConneciton)
+	stockMonitor := stock.New(&slog.Logger{}, stockRepository,
+		stockRepository, nil)
 	for {
-		s, err := stockRepository.Get(context.Background(), ticker)
+		s, err := stockMonitor.Stock(context.Background(), ticker)
 		if err != nil {
 			log.Println(fmt.Errorf("%s: %w", op, err))
 			continue

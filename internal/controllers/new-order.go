@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"rapidEx/internal/domain/order"
-	redisconnect "rapidEx/internal/redis-connect"
+	redisconnect "rapidEx/internal/redis"
 	orderrepository "rapidEx/internal/repositories/order-repository"
 
 	"github.com/gofiber/fiber/v2"
