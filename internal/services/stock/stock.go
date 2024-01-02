@@ -21,16 +21,24 @@ type StockSaver interface {
 	Set(ctx context.Context, stock *stock.Stock) error
 }
 
-type StockMonitor struct {
-	log           *slog.Logger
-	stockProvider StockProvider
-	stockSaver    StockSaver
+type PrecisionProvider interface {
+	Precision(price float64) int64
 }
 
-func New(log *slog.Logger, stockProvider StockProvider, stockSaver StockSaver) *StockMonitor {
+type StockMonitor struct {
+	log               *slog.Logger
+	stockProvider     StockProvider
+	stockSaver        StockSaver
+	precisionProvider PrecisionProvider
+}
+
+func New(log *slog.Logger, stockProvider StockProvider,
+	stockSaver StockSaver,
+	precisionProvider PrecisionProvider) *StockMonitor {
 	return &StockMonitor{log: log,
-		stockProvider: stockProvider,
-		stockSaver:    stockSaver}
+		stockProvider:     stockProvider,
+		stockSaver:        stockSaver,
+		precisionProvider: precisionProvider}
 }
 
 func (s *StockMonitor) Stock(ctx context.Context, ticker string) (*stock.Stock, error) {
