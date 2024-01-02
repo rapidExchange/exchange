@@ -4,12 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"rapidEx/internal/domain/user"
+	"rapidEx/internal/storage"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 type Repository interface {
-	Create(ctx context.Context, user *user.User) error
-	Get(ctx context.Context, email string) (*user.User, error)
+	Set(ctx context.Context, user *user.User) error
+	User(ctx context.Context, email string) (*user.User, error)
 	Update(ctx context.Context, user *user.User) error
 	Delete(ctx context.Context, email string) error
 }
@@ -18,19 +22,30 @@ type mysqlRepository struct {
 	mc *sql.DB
 }
 
-func (m *mysqlRepository) Create(ctx context.Context, user *user.User) error {
+func (m *mysqlRepository) Set(ctx context.Context, user *user.User) error {
+	const op = "userRepository.Set"
 	err := m.mc.Ping()
 	if err != nil {
 		return err
 	}
 
-	_, err = m.mc.Exec("INSERT INTO users(uuid, email, password_hash) VALUES(?, ?, ?)", user.UUID.String(),
-		user.Email, user.PasswordHash)
-	return err
+	stmt, err := m.mc.Prepare("INSERT INTO users(uuid, email, password_hash) VALUES(?, ?, ?)")
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = stmt.ExecContext(ctx, user.UUID.String(), user.Email, user.PasswordHash)
+	if err != nil {
+		var mysqlErr *mysql.MySQLError
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return storage.ErrUserExists
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
 }
 
 // TODO: refactor
-func (m *mysqlRepository) Get(ctx context.Context, email string) (*user.User, error) {
+func (m *mysqlRepository) User(ctx context.Context, email string) (*user.User, error) {
 	err := m.mc.Ping()
 	if err != nil {
 		return nil, err
