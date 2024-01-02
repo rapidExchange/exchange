@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"rapidEx/internal/domain/order"
 )
@@ -27,5 +28,14 @@ func New(log *slog.Logger, ordersProvider OrdersProvider, orderSaver OrderSaver)
 }
 
 func (o *OrderMonitor) GetAll(ctx context.Context) ([]*order.Order, error) {
-	panic("implement me")
+	const op = "orderMonitor.GetAll"
+
+	log := o.log.With(slog.String("op", op))
+
+	orders, err := o.ordersProvider.GetAll(ctx)
+	if err != nil {
+		log.Warn("Unable to get orders")
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return orders, nil
 }
