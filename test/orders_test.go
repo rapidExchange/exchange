@@ -3,7 +3,7 @@ package test
 import (
 	"context"
 	"rapidEx/internal/domain/order"
-	redisconnect "rapidEx/internal/redis-connect"
+	redisconnect "rapidEx/internal/redis"
 	orderrepository "rapidEx/internal/repositories/order-repository"
 	"testing"
 )

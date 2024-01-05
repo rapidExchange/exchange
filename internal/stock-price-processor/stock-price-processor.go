@@ -89,6 +89,6 @@ func (proc *stockPriceProcessor) UpdatePrice(ticker string) error {
 
 	log.Printf("New price of %s : %f", ticker, stock.Price)
 
-	err = sRep.Set(ctx, *stock)
+	err = sRep.Set(ctx, stock)
 	return err
 }

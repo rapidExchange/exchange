@@ -3,13 +3,15 @@ package generator
 import (
 	"context"
 	"log"
+	"log/slog"
 	"math"
 	"math/rand"
 
 	"rapidEx/internal/domain/order"
-	"rapidEx/internal/domain/stock"
-	"rapidEx/internal/redis-connect"
+	stockDomain "rapidEx/internal/domain/stock"
+	"rapidEx/internal/redis"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
+	"rapidEx/internal/services/stock"
 	"rapidEx/internal/tickerStorage"
 	"rapidEx/internal/utils"
 )
@@ -32,7 +34,7 @@ func (g Generator) generate(cPrice float64, ticker string) (float64, float64) {
 	return utils.Round(volume, prec+3), utils.Round(price, prec)
 }
 
-func (g Generator) OrderGenerate(s *stock.Stock) order.Order {
+func (g Generator) OrderGenerate(s *stockDomain.Stock) order.Order {
 	volume, price := g.generate(s.Price, s.Ticker)
 
 	Order := order.Order{Ticker: s.Ticker, Quantity: volume, Price: price}
@@ -59,7 +61,9 @@ func (g Generator) GenerateForAll() {
 
 		ctx := context.Background()
 
-		stock, err := stockRepository.Get(ctx, ticker)
+		stockMonitor := stock.New(&slog.Logger{}, stockRepository, stockRepository, nil)
+
+		stock, err := stockMonitor.Stock(ctx, ticker)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -67,13 +71,13 @@ func (g Generator) GenerateForAll() {
 
 		g.GenerateALot(stock, 10)
 
-		stockRepository.Set(ctx, *stock)
+		stockRepository.Set(ctx, stock)
 		
 	}
 }
 
 //GenerateALot generates a lot orders for one stock sequentially
-func (g Generator)GenerateALot(s *stock.Stock, genNum int) {
+func (g Generator)GenerateALot(s *stockDomain.Stock, genNum int) {
 	for i := 0; i < genNum; i++ {
 		g.OrderGenerate(s)
 	}
