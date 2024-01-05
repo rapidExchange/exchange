@@ -1,17 +1,12 @@
 package generator
 
 import (
-	"context"
 	"log"
-	"log/slog"
 	"math"
 	"math/rand"
 
 	"rapidEx/internal/domain/order"
 	stockDomain "rapidEx/internal/domain/stock"
-	"rapidEx/internal/redis"
-	stockrepository "rapidEx/internal/repositories/stock-repository"
-	"rapidEx/internal/services/stock"
 	"rapidEx/internal/tickerStorage"
 	"rapidEx/internal/utils"
 )
@@ -48,33 +43,6 @@ func (g Generator) OrderGenerate(s *stockDomain.Stock) order.Order {
 	return Order
 }
 
-func (g Generator) GenerateForAll() {
-	tickerStorage := tickerstorage.GetInstanse()
-	tickers := tickerStorage.GetTickers()
-	if len(tickers) == 0 {
-		log.Println("Waiting stocks for orders generate")
-	}
-	for _, ticker := range tickers {
-		redisClient := redisconnect.MustConnect()
-
-		stockRepository := stockrepository.NewStockRepository(redisClient)
-
-		ctx := context.Background()
-
-		stockMonitor := stock.New(&slog.Logger{}, stockRepository, stockRepository, nil)
-
-		stock, err := stockMonitor.Stock(ctx, ticker)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-
-		g.GenerateALot(stock, 10)
-
-		stockRepository.Set(ctx, stock)
-		
-	}
-}
 
 //GenerateALot generates a lot orders for one stock sequentially
 func (g Generator)GenerateALot(s *stockDomain.Stock, genNum int) {

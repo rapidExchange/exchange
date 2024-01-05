@@ -1,12 +1,10 @@
 package stockPriceProcessor
 
 import (
-	"context"
 	"errors"
 	"log"
+	"rapidEx/internal/domain/stock"
 	stockBook "rapidEx/internal/domain/stock-book"
-	redisconnect "rapidEx/internal/redis"
-	stockrepository "rapidEx/internal/repositories/stock-repository"
 	tickerstorage "rapidEx/internal/tickerStorage"
 	"rapidEx/internal/utils"
 	"strings"
@@ -54,41 +52,19 @@ func (proc *stockPriceProcessor) PreciseAs(s string) int {
 	return len(st)
 }
 
-// UpdatePrices updates all stocks price
-func (proc *stockPriceProcessor) UpdatePrices() {
-	tickerStorage := tickerstorage.GetInstanse()
-	tickers := tickerStorage.GetTickers()
-	for _, ticker := range tickers {
-		err := proc.UpdatePrice(ticker)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-	}
-}
-
-func (proc *stockPriceProcessor) UpdatePrice(ticker string) error {
-	redisClient := redisconnect.MustConnect()
-	sRep := stockrepository.NewStockRepository(redisClient)
-	ctx := context.Background()
-
-	stock, err := sRep.Stock(ctx, ticker)
-	if err != nil {
-		return err
-	}
+func (proc *stockPriceProcessor) UpdatePrice(stock *stock.Stock) error {
 	price, err := proc.MeanWeight(stock.Stockbook)
 	if err != nil {
 		return err
 	}
 	tickerStorage := tickerstorage.GetInstanse()
-	prec, ok := tickerStorage.Get(ticker)
+	prec, ok := tickerStorage.Get(stock.Ticker)
 	if !ok {
-		log.Println("Undefined ticker in tickerstorage: ", ticker)
+		log.Println("Undefined ticker in tickerstorage: ", stock.Ticker)
 	}
 	stock.Price = utils.Round(price, prec)
 
-	log.Printf("New price of %s : %f", ticker, stock.Price)
+	log.Printf("New price of %s : %f", stock.Ticker, stock.Price)
 
-	err = sRep.Set(ctx, stock)
-	return err
+	return nil
 }

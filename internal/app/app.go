@@ -2,68 +2,57 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"rapidEx/config"
 	"rapidEx/internal/controllers"
-	dealsprocessor "rapidEx/internal/deals-processor"
-	"time"
+	"rapidEx/internal/domain/stock"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/redis/go-redis/v9"
-
-	"rapidEx/internal/generator"
-	stockPriceProcessor "rapidEx/internal/stock-price-processor"
 )
 
 type app struct {
-	c           config.Config
-	ctx         context.Context
-	redisClient *redis.Client
+	c                   config.Config
+	ctx                 context.Context
+	gen                 Generator
+	dealsProcessor      DealsProcessor
+	stockPriceProcessor StockPriceProcessor
+	tickerStorage       TickerStorage
 }
 
-func New() (*app, error) {
-	var a app
+type Generator interface {
+	GenerateALot(stock *stock.Stock, genNum int)
+}
+
+type DealsProcessor interface {
+	Do()
+}
+
+type StockPriceProcessor interface {
+	UpdatePrice(stock *stock.Stock) error
+}
+
+type TickerStorage interface {
+	GetTickers() []string
+}
+
+func New(gen Generator,
+	dealsDealsProcessor DealsProcessor,
+	stockPriceProcessor StockPriceProcessor,
+	tickerStorage TickerStorage) (*app, error) {
 	pwd, _ := os.Getwd()
 	c, err := config.LoadConfig(pwd)
 	if err != nil {
 		return nil, err
 	}
 
-	a.c = c
+	return &app{c: c, gen: gen, dealsProcessor: dealsDealsProcessor,
+		stockPriceProcessor: stockPriceProcessor, tickerStorage: tickerStorage}, nil
 
-	if err := a.setRedisConn(); err != nil {
-		return nil, err
-	}
-	return &a, nil
-
-}
-
-func (a *app) setRedisConn() error {
-	opt, err := redis.ParseURL(fmt.Sprintf("redis://%s:%s@localhost:6379/0", a.c.RedisUser, a.c.RedisPassword))
-
-	if err != nil {
-		return err
-	}
-
-	a.redisClient = redis.NewClient(opt)
-
-	return nil
 }
 
 func (a *app) Do() {
-	go func() {
-		gen := generator.New()
-		sProcessor := stockPriceProcessor.New()
-		dProcessor := dealsprocessor.New()
-		for {
-			time.Sleep(time.Second * 1)
-			gen.GenerateForAll()
-			sProcessor.UpdatePrices()
-			dProcessor.Do()
-		}
-	}()
+
 }
 
 func (a *app) ListenAndServe() {
