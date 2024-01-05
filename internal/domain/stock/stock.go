@@ -1,11 +1,15 @@
 package stock
 
-import stockBook "rapidEx/internal/domain/stock-book"
+import (
+	stockBook "rapidEx/internal/domain/stock-book"
+	"sync"
+)
 
 type Stock struct {
 	Ticker    string
 	Price     float64
 	Stockbook stockBook.StockBook
+	*sync.RWMutex
 }
 
 func New(ticker string, price float64) *Stock {

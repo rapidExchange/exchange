@@ -22,10 +22,12 @@ type StockModify struct {
 
 func NewStockMapString(s stock.Stock) *StockModify {
 	var sMap StockModify
+	s.RWMutex.Lock()
 	sMap.Ticker = s.Ticker
 	sMap.Price = s.Price
 	sMap.Buy = mapFloatToString(s.Stockbook.Buy)
 	sMap.Sell = mapFloatToString(s.Stockbook.Sell)
+	s.RWMutex.Unlock()
 	return &sMap
 }
 
@@ -50,11 +52,13 @@ type rsClient struct {
 }
 
 func (r *rsClient) Set(ctx context.Context, stock *stock.Stock) error {
+	stock.RWMutex.Lock()
 	stockMapString := NewStockMapString(*stock)
 	status := r.rc.Set(ctx, stock.Ticker, stockMapString, time.Second*1000)
 	if status.Err() != nil {
 		return status.Err()
 	}
+	stock.RWMutex.Unlock()
 	return nil
 }
 
