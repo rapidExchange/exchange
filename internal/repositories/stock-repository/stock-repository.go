@@ -20,14 +20,14 @@ type StockModify struct {
 	Sell   map[string]string `json:"stockBookSell"` 
 }
 
-func NewStockMapString(s stock.Stock) *StockModify {
+func NewStockMapString(s *stock.Stock) *StockModify {
 	var sMap StockModify
-	s.RWMutex.Lock()
+	s.Lock.Lock()
 	sMap.Ticker = s.Ticker
 	sMap.Price = s.Price
 	sMap.Buy = mapFloatToString(s.Stockbook.Buy)
 	sMap.Sell = mapFloatToString(s.Stockbook.Sell)
-	s.RWMutex.Unlock()
+	s.Lock.Unlock()
 	return &sMap
 }
 
@@ -52,13 +52,11 @@ type rsClient struct {
 }
 
 func (r *rsClient) Set(ctx context.Context, stock *stock.Stock) error {
-	stock.RWMutex.Lock()
-	stockMapString := NewStockMapString(*stock)
+	stockMapString := NewStockMapString(stock)
 	status := r.rc.Set(ctx, stock.Ticker, stockMapString, time.Second*1000)
 	if status.Err() != nil {
 		return status.Err()
 	}
-	stock.RWMutex.Unlock()
 	return nil
 }
 

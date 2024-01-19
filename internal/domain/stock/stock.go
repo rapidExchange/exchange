@@ -9,7 +9,7 @@ type Stock struct {
 	Ticker    string
 	Price     float64
 	Stockbook stockBook.StockBook
-	*sync.RWMutex
+	Lock sync.RWMutex
 }
 
 func New(ticker string, price float64) *Stock {
@@ -17,5 +17,6 @@ func New(ticker string, price float64) *Stock {
 		Ticker:    ticker,
 		Price:     price,
 		Stockbook: *stockBook.New(),
+		Lock: sync.RWMutex{},
 	}
 }

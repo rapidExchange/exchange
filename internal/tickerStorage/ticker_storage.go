@@ -10,6 +10,7 @@ type TickerStorage interface {
 	GetTickers() []string
 	Find(ticker string) bool
 	Get(ticker string) (int, bool)
+	Refresh() TickerStorage
 }
 
 // tickerStorage is an implementation of singleton pattern for store all stock tickers
@@ -57,4 +58,8 @@ func (t *tickerStorage) Find(ticker string) bool {
 func(t *tickerStorage) Get(ticker string) (int, bool) {
 	prec, ok := t.TickersPrecision[ticker]
 	return prec, ok
+}
+
+func (t *tickerStorage) Refresh() TickerStorage {
+	return t
 }

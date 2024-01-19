@@ -18,7 +18,6 @@ type registerRequest struct {
 }
 
 func register(c *fiber.Ctx) error {
-	const op = "controllers.register"
 	registerReq := new(registerRequest)
 	if err := c.BodyParser(&registerReq); err != nil {
 		log.Println(err)

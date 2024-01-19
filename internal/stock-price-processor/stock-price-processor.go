@@ -48,7 +48,7 @@ func (proc *stockPriceProcessor) MeanWeight(stockBook stockBook.StockBook) (floa
 }
 
 func (proc *stockPriceProcessor) PreciseAs(s string) int {
-	st := strings.TrimRight(strings.Split(s, ".")[1], "0")
+	st := strings.TrimRight(strings.Split(s, ".")[0], "0")
 	return len(st)
 }
 
@@ -63,8 +63,6 @@ func (proc *stockPriceProcessor) UpdatePrice(stock *stock.Stock) error {
 		log.Println("Undefined ticker in tickerstorage: ", stock.Ticker)
 	}
 	stock.Price = utils.Round(price, prec)
-
-	log.Printf("New price of %s : %f", stock.Ticker, stock.Price)
 
 	return nil
 }

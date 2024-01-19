@@ -37,7 +37,7 @@ func addStock(c *fiber.Ctx) error {
 		log.Println(fmt.Errorf("%s: %w", op, err))
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	symbol := createSymbol(getPriceBinanceRequest.FirstSymbol, getPriceBinanceRequest.SecondSymbol)
+	symbol := strings.ToUpper(getPriceBinanceRequest.FirstSymbol + getPriceBinanceRequest.SecondSymbol)
 	price, err := getBinancePrice(symbol)
 	if err != nil {
 		log.Println(fmt.Errorf("%s: %w", op, err))
@@ -45,7 +45,7 @@ func addStock(c *fiber.Ctx) error {
 	}
 	precision := getPrecision(price)
 	roundedPrice := utils.Round(price, precision)
-	ticker := createTicker(getPriceBinanceRequest.FirstSymbol, getPriceBinanceRequest.SecondSymbol)
+	ticker := strings.ToLower(getPriceBinanceRequest.FirstSymbol + "/" + getPriceBinanceRequest.SecondSymbol)
 	err = setStock(ticker, roundedPrice)
 	if err != nil {
 		log.Println(fmt.Errorf("%s: %w", op, err))
@@ -78,7 +78,6 @@ func setStock(ticker string, price float64) error {
 	redisClient := redisconnect.MustConnect()
 	stockRepository := stockrepository.NewStockRepository(redisClient)
 	err := stockRepository.Set(context.Background(), Stock)
-
 	return err
 }
 
@@ -111,16 +110,9 @@ func getPrecision(price float64) int {
 func setTickerToStorage(ticker string, precision int) {
 	tickerStorage := tickerstorage.GetInstanse()
 	tickerStorage.TickerAppend(ticker, precision)
+	log.Println(tickerStorage.GetTickers())
 }
 
 func readBody(source io.Reader) ([]byte, error) {
 	return io.ReadAll(source)
-}
-
-func createSymbol(firstStock, secondStock string) string {
-	return strings.ToUpper(firstStock + secondStock)
-}
-
-func createTicker(firstStock, secondStock string) string {
-	return strings.ToLower(firstStock + "/" + secondStock)
 }

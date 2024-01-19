@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"os"
 	"rapidEx/internal/domain/order"
+	stockDomain "rapidEx/internal/domain/stock"
 	redisconnect "rapidEx/internal/redis"
 	orderrepository "rapidEx/internal/repositories/order-repository"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
 	"rapidEx/internal/services/stock"
-	stockDomain "rapidEx/internal/domain/stock"
 	"rapidEx/internal/storage"
 )
 
@@ -19,13 +20,15 @@ type dealsProcessor struct {
 }
 
 // TODO: add order in order history & update user balance-sheet
+//TODO send order to mysql order table
+//TODO: rewrite function to worker with stock and orders in arguments
 func (d *dealsProcessor) Do() {
 	orders, err := getAllOrders()
 	stockRepository := stockrepository.NewStockRepository(redisconnect.MustConnect())
 	if err != nil {
 		panic(err)
 	}
-	stockMonitor := stock.New(&slog.Logger{}, 
+	stockMonitor := stock.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), 
 		stockRepository,
 		stockRepository, nil)
 	for _, order := range orders {
@@ -47,7 +50,6 @@ func (d *dealsProcessor) Do() {
 				}
 				orderRepository := orderrepository.NewOrderRepository(redisconnect.MustConnect())
 				order.Status = "completed"
-				//TODO send order to mysql order table
 				orderRepository.Del(context.Background(), order)
 			}
 		}

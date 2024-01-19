@@ -7,18 +7,16 @@ import (
 	dealsprocessor "rapidEx/internal/deals-processor"
 	"rapidEx/internal/generator"
 	stockPriceProcessor "rapidEx/internal/stock-price-processor"
-	tickerstorage "rapidEx/internal/tickerStorage"
 )
 
 func main() {
 	gen := generator.New()
 	dealsprocessor := dealsprocessor.New()
 	stockPriceProcessor := stockPriceProcessor.New()
-	tickerstorage := tickerstorage.GetInstanse()
-	app, err := app.New(gen, dealsprocessor, stockPriceProcessor, tickerstorage)
+	app, err := app.New(gen, dealsprocessor, stockPriceProcessor)
 	if err != nil {
 		log.Fatal(err)
 	}
-	app.Do()
+	go app.Do()
 	app.ListenAndServe()
 }

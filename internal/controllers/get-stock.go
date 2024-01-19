@@ -56,7 +56,7 @@ func GetStock(c *websocket.Conn) {
 			log.Println(fmt.Errorf("%s: %w", op, err))
 			continue
 		}
-		stockModify := stockrepository.NewStockMapString(*s)
+		stockModify := stockrepository.NewStockMapString(s)
 		c.WriteJSON(getStockWS{Ticker: stockModify.Ticker,
 			Price: stockModify.Price, Buy: stockModify.Buy,
 			Sell: stockModify.Sell, Precision: prec})
