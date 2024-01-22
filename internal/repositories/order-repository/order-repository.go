@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"log"
 	"rapidEx/internal/domain/order"
+	"rapidEx/internal/domain/stock"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type Repository interface {
 	Set(ctx context.Context, order *order.Order) error
-	GetAll(ctx context.Context) ([]*order.Order, error)
+	All(ctx context.Context, s *stock.Stock) ([]*order.Order, error)
 	Del(ctx context.Context, order *order.Order) error
 }
 
@@ -31,7 +32,8 @@ func (r *rsClient) Set(ctx context.Context, order *order.Order) error {
 	return nil
 }
 
-func (r *rsClient) GetAll(ctx context.Context) ([]*order.Order, error) {
+//TODO: imlement gettinr orders through stock ticker
+func (r *rsClient) All(ctx context.Context, s *stock.Stock) ([]*order.Order, error) {
 	const op = "orderRepository.GetAll"
 
 	stringCmd := r.rc.HGetAll(ctx, "orders")

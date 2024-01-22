@@ -30,18 +30,18 @@ type Generator interface {
 }
 
 type DealsProcessor interface {
-	Do()
+	Do(s *stockDomain.Stock)
 }
 
 type StockPriceProcessor interface {
 	UpdatePrice(stock *stockDomain.Stock) error
 }
 
-
 type StockProvider interface {
 	Set(ctx context.Context, stock *stockDomain.Stock) error
 	Stock(ctx context.Context, ticker string) (*stockDomain.Stock, error)
 }
+
 func New(gen Generator,
 	dealsDealsProcessor DealsProcessor,
 	stockPriceProcessor StockPriceProcessor) (*app, error) {
@@ -57,29 +57,29 @@ func New(gen Generator,
 
 func (a *app) Do() {
 	for {
-	tickers := getTickers()
-	if len(tickers) == 0 {
-		log.Println("Waiting stocks for generate")
-	}
-	stockRepository := stockrepository.NewStockRepository(redisconnect.MustConnect())
-	stockProvider := stock.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), stockRepository, stockRepository, nil)
-
-	for _, ticker := range tickers {
-		stock, err := stockProvider.Stock(context.Background(), ticker)
-		if err != nil {
-			log.Println(err)
-			continue
+		tickers := getTickers()
+		if len(tickers) == 0 {
+			log.Println("Waiting stocks for generate")
 		}
-		go a.handleStock(stock, stockProvider)
-		log.Printf("new price of %s: %f\n", stock.Ticker, stock.Price)
+		stockRepository := stockrepository.NewStockRepository(redisconnect.MustConnect())
+		stockProvider := stock.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), stockRepository, stockRepository, nil)
+
+		for _, ticker := range tickers {
+			stock, err := stockProvider.Stock(context.Background(), ticker)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			go a.handleStock(stock, stockProvider)
+			log.Printf("new price of %s: %f\n", stock.Ticker, stock.Price)
+		}
+		time.Sleep(1 * time.Second)
 	}
-	time.Sleep(1 * time.Second)
-}
 }
 
-func (a *app)handleStock(stock *stockDomain.Stock, stockProvider StockProvider) {
+func (a *app) handleStock(stock *stockDomain.Stock, stockProvider StockProvider) {
 	a.gen.GenerateALot(stock, 10)
-	a.dealsProcessor.Do()
+	a.dealsProcessor.Do(stock)
 	a.stockPriceProcessor.UpdatePrice(stock)
 	if err := stockProvider.Set(context.Background(), stock); err != nil {
 		log.Println(err)
