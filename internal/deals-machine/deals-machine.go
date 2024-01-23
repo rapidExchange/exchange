@@ -20,7 +20,7 @@ type stockProvider interface {
 
 type OrdersStorage interface {
 	All(ctx context.Context, s *stock.Stock) ([]*order.Order, error)
-	Del(ctx context.Context, order *order.Order)
+	Del(ctx context.Context, order *order.Order) error
 }
 
 // TODO: add order in order history & update user balance-sheet

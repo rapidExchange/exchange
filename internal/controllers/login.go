@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"log/slog"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -26,7 +27,7 @@ func login(c *fiber.Ctx) error {
 	}
 	mc := mysqlconnect.MustConnect()
 	userRepository := userrepository.NewUserRepository(mc)
-	auth := auth.New(&slog.Logger{}, userRepository, userRepository)
+	auth := auth.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), userRepository, userRepository)
 	token, err := auth.Login(context.Background(), loginReq.Email, loginReq.Password)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {

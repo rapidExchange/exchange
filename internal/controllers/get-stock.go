@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"os"
 	redisconnect "rapidEx/internal/redis"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
 	"rapidEx/internal/services/stock"
@@ -48,7 +49,7 @@ func GetStock(c *websocket.Conn) {
 
 	redisConneciton := redisconnect.MustConnect()
 	stockRepository := stockrepository.NewStockRepository(redisConneciton)
-	stockMonitor := stock.New(&slog.Logger{}, stockRepository,
+	stockMonitor := stock.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), stockRepository,
 		stockRepository, nil)
 	for {
 		s, err := stockMonitor.Stock(context.Background(), ticker)

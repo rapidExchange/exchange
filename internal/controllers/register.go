@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"log/slog"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -25,7 +26,7 @@ func register(c *fiber.Ctx) error {
 	}
 	mc := mysql.MustConnect()
 	userRepository := userrepository.NewUserRepository(mc)
-	auth := auth.New(&slog.Logger{}, userRepository, userRepository)
+	auth := auth.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), userRepository, userRepository)
 	err := auth.Register(context.Background(), registerReq.Email, registerReq.Password)
 	if err != nil {
 		log.Println(err)
