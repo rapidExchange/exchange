@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -91,7 +92,7 @@ func (a *app) ListenAndServe() {
 
 	controllers.RegisterRoutes(fiberApp)
 
-	log.Fatal(fiberApp.Listen(":2345"))
+	log.Fatal(fiberApp.Listen(fmt.Sprintf(":%s", a.c.AppPort)))
 }
 
 func getTickers() []string {

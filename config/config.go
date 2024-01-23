@@ -5,6 +5,7 @@ import (
 )
 
 type Config struct {
+	AppPort string `mapstructure:"APP_PORT"`
 	RedisUser     string `mapstructure:"REDIS_USER"`
 	RedisHost     string `mapstructure:"REDIS_HOST"`
 	RedisPassword string `mapstructure:"REDIS_PASS"`
