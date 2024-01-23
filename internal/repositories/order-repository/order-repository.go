@@ -62,7 +62,7 @@ func (r *rsClient) All(ctx context.Context, s *stock.Stock) ([]*order.Order, err
 }
 
 func (r *rsClient) Del(ctx context.Context, order *order.Order) error {
-	intCmd := r.rc.HDel(ctx, "orders", order.OrderUUID.String())
+	intCmd := r.rc.HDel(ctx, hashTicker(order.Ticker), order.OrderUUID.String())
 	log.Println(intCmd.Result())
 
 	if intCmd.Err() != nil {
