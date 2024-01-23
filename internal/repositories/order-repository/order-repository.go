@@ -24,7 +24,7 @@ type rsClient struct {
 func (r *rsClient) Set(ctx context.Context, order *order.Order) error {
 	const op = "orderRepository.Set"
 
-	status := r.rc.HSet(ctx, "orders", order.OrderUUID.String(), order)
+	status := r.rc.HSet(ctx, order.Ticker, order.OrderUUID.String(), order)
 	if status.Err() != nil {
 		return fmt.Errorf("%s: %w", op, status.Err())
 	}
@@ -32,11 +32,10 @@ func (r *rsClient) Set(ctx context.Context, order *order.Order) error {
 	return nil
 }
 
-//TODO: imlement gettinr orders through stock ticker
 func (r *rsClient) All(ctx context.Context, s *stock.Stock) ([]*order.Order, error) {
 	const op = "orderRepository.GetAll"
 
-	stringCmd := r.rc.HGetAll(ctx, "orders")
+	stringCmd := r.rc.HGetAll(ctx, s.Ticker)
 
 	switch {
 	case stringCmd.Err() == redis.Nil:
