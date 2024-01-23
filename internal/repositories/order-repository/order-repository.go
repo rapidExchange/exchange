@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"hash/fnv"
 	"rapidEx/internal/domain/order"
 	"rapidEx/internal/domain/stock"
 
@@ -24,7 +25,7 @@ type rsClient struct {
 func (r *rsClient) Set(ctx context.Context, order *order.Order) error {
 	const op = "orderRepository.Set"
 
-	status := r.rc.HSet(ctx, order.Ticker, order.OrderUUID.String(), order)
+	status := r.rc.HSet(ctx, hashTicker(order.Ticker), order.OrderUUID.String(), order)
 	if status.Err() != nil {
 		return fmt.Errorf("%s: %w", op, status.Err())
 	}
@@ -33,9 +34,8 @@ func (r *rsClient) Set(ctx context.Context, order *order.Order) error {
 }
 
 func (r *rsClient) All(ctx context.Context, s *stock.Stock) ([]*order.Order, error) {
-	const op = "orderRepository.GetAll"
-
-	stringCmd := r.rc.HGetAll(ctx, s.Ticker)
+	const op = "orderRepository.All"
+	stringCmd := r.rc.HGetAll(ctx, hashTicker(s.Ticker))
 
 	switch {
 	case stringCmd.Err() == redis.Nil:
@@ -74,4 +74,11 @@ func (r *rsClient) Del(ctx context.Context, order *order.Order) error {
 
 func NewOrderRepository(rc *redis.Client) Repository {
 	return &rsClient{rc: rc}
+}
+
+
+func hashTicker(ticker string) string {
+	hash := fnv.New32a()
+	hash.Write([]byte(ticker))
+	return fmt.Sprintf("%x", hash.Sum(nil))
 }
