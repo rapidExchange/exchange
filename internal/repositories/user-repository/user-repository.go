@@ -44,15 +44,14 @@ func (m *mysqlRepository) Set(ctx context.Context, user *user.User) error {
 	return nil
 }
 
-// TODO: refactor
 func (m *mysqlRepository) User(ctx context.Context, email string) (*user.User, error) {
+	const op = "userRepository.User"
 	err := m.mc.Ping()
 	if err != nil {
 		return nil, err
 	}
-
 	row := m.mc.QueryRowContext(context.Background(), "SELECT * FROM users WHERE email=?", email)
-	if err != nil {
+	if row.Err() != nil {
 		if errors.Is(row.Err(), sql.ErrNoRows) {
 			return nil, errors.New("userNotFound")
 		}
@@ -63,15 +62,25 @@ func (m *mysqlRepository) User(ctx context.Context, email string) (*user.User, e
 	if err != nil {
 		return nil, err
 	}
+	balanceSheet, err := m.userBalanceSheet(u.Email)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	u.Balance = balanceSheet
+
+	return u, nil
+}
+
+func (m *mysqlRepository) userBalanceSheet(email string) (map[string]float64, error) {
 	rows, err := m.mc.QueryContext(context.Background(), "SELECT ticker, quantity FROM balance WHERE email = ?", email)
 	if err != nil {
-		if errors.Is(row.Err(), sql.ErrNoRows) {
-			return nil, nil
-		}
 		return nil, err
 	}
+
 	var ticker string
 	var quantity float64
+
 	balance := make(map[string]float64)
 	for rows.Next() {
 		err := rows.Scan(&ticker, &quantity)
@@ -80,8 +89,7 @@ func (m *mysqlRepository) User(ctx context.Context, email string) (*user.User, e
 		}
 		balance[ticker] = quantity
 	}
-	u.Balance = balance
-	return u, nil
+	return balance, nil
 }
 
 func (m *mysqlRepository) Update(ctx context.Context, user *user.User) error {
