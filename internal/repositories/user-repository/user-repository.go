@@ -11,6 +11,23 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
+const (
+	SetUserQuery    = "INSERT INTO users(uuid, email, password_hash) VALUES(?, ?, ?)"
+	GetUserQuery    = "SELECT * FROM users WHERE email=?"
+	UpdateUserQuery = "UPDATE users SET password_hash=? WHERE email=?"
+	DeleteUserQuery = "DELETE FROM users WHERE email=?"
+
+	UpdateUserBalanceSheetQuery = `IF EXISTS (SELECT ticker FROM balance WHERE(email=? AND ticker=?))
+	BEGIN
+		UPDATE balance SET quantity=? WHERE(email=? AND ticker=?)
+	END
+	ELSE
+	BEGIN
+		INSERT INTO balance(email, ticker, quantity) VALUES(?, ?, ?)`
+
+	GetTickerQuery = "SELECT ticker, quantity FROM balance WHERE email = ?"
+)
+
 type Repository interface {
 	Set(ctx context.Context, user *user.User) error
 	User(ctx context.Context, email string) (*user.User, error)
@@ -29,7 +46,7 @@ func (m *mysqlRepository) Set(ctx context.Context, user *user.User) error {
 		return err
 	}
 
-	stmt, err := m.mc.Prepare("INSERT INTO users(uuid, email, password_hash) VALUES(?, ?, ?)")
+	stmt, err := m.mc.Prepare(SetUserQuery)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -50,7 +67,7 @@ func (m *mysqlRepository) User(ctx context.Context, email string) (*user.User, e
 	if err != nil {
 		return nil, err
 	}
-	row := m.mc.QueryRowContext(context.Background(), "SELECT * FROM users WHERE email=?", email)
+	row := m.mc.QueryRowContext(context.Background(), GetUserQuery, email)
 	if row.Err() != nil {
 		if errors.Is(row.Err(), sql.ErrNoRows) {
 			return nil, errors.New("userNotFound")
@@ -73,7 +90,7 @@ func (m *mysqlRepository) User(ctx context.Context, email string) (*user.User, e
 }
 
 func (m *mysqlRepository) userBalanceSheet(email string) (map[string]float64, error) {
-	rows, err := m.mc.QueryContext(context.Background(), "SELECT ticker, quantity FROM balance WHERE email = ?", email)
+	rows, err := m.mc.QueryContext(context.Background(), GetTickerQuery, email)
 	if err != nil {
 		return nil, err
 	}
@@ -99,17 +116,10 @@ func (m *mysqlRepository) Update(ctx context.Context, user *user.User) error {
 	}
 
 	_, err = m.mc.ExecContext(context.Background(),
-		"UPDATE users SET password_hash=? WHERE email=?",
+		UpdateUserQuery,
 		user.PasswordHash, user.Email)
 	for ticker, quantity := range user.Balance {
-		_, err = m.mc.ExecContext(context.Background(),
-			`IF EXISTS (SELECT ticker FROM balance WHERE(email=? AND ticker=?))
-	BEGIN
-		UPDATE balance SET quantity=? WHERE(email=? AND ticker=?)
-	END
-	ELSE
-	BEGIN
-		INSERT INTO balance(email, ticker, quantity) VALUES(?, ?, ?)`,
+		_, err = m.mc.ExecContext(context.Background(), UpdateUserBalanceSheetQuery,
 			user.Email, ticker, quantity, user.Email, ticker, user.Email, ticker, quantity)
 	}
 	return err
@@ -121,7 +131,7 @@ func (m *mysqlRepository) Delete(ctx context.Context, email string) error {
 		return err
 	}
 
-	_, err = m.mc.Exec("DELETE FROM users WHERE email=?", email)
+	_, err = m.mc.Exec(DeleteUserQuery, email)
 	return err
 }
 
