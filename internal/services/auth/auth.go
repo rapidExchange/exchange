@@ -19,7 +19,7 @@ var (
 	ErrInvalidCredenitals = errors.New("invalid credentials")
 )
 
-type Auth struct {
+type AuthService struct {
 	log          *slog.Logger
 	userSaver    UserSaver
 	userProvider UserProvider
@@ -33,13 +33,13 @@ type UserSaver interface {
 	Set(ctx context.Context, user *user.User) error
 }
 
-func New(log *slog.Logger, userSaver UserSaver, userProvider UserProvider) *Auth {
-	return &Auth{log: log,
+func New(log *slog.Logger, userSaver UserSaver, userProvider UserProvider) *AuthService {
+	return &AuthService{log: log,
 		userSaver:    userSaver,
 		userProvider: userProvider}
 }
 
-func (a *Auth) Register(ctx context.Context, email, password string) error {
+func (a *AuthService) Register(ctx context.Context, email, password string) error {
 	const op = "Auth.Register"
 
 	log := a.log.With(
@@ -65,7 +65,7 @@ func (a *Auth) Register(ctx context.Context, email, password string) error {
 	return nil
 }
 
-func (a *Auth) Login(ctx context.Context, email, password string) (string, error) {
+func (a *AuthService) Login(ctx context.Context, email, password string) (string, error) {
 	const op = "Auth.Login"
 
 	log := a.log.With(

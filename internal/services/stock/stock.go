@@ -25,7 +25,7 @@ type PrecisionProvider interface {
 	Precision(price float64) int64
 }
 
-type StockMonitor struct {
+type StockService struct {
 	log               *slog.Logger
 	stockProvider     StockProvider
 	stockSaver        StockSaver
@@ -34,14 +34,14 @@ type StockMonitor struct {
 
 func New(log *slog.Logger, stockProvider StockProvider,
 	stockSaver StockSaver,
-	precisionProvider PrecisionProvider) *StockMonitor {
-	return &StockMonitor{log: log,
+	precisionProvider PrecisionProvider) *StockService {
+	return &StockService{log: log,
 		stockProvider:     stockProvider,
 		stockSaver:        stockSaver,
 		precisionProvider: precisionProvider}
 }
 
-func (s *StockMonitor) Stock(ctx context.Context, ticker string) (*stock.Stock, error) {
+func (s *StockService) Stock(ctx context.Context, ticker string) (*stock.Stock, error) {
 	const op = "stockMonitor.Stock"
 	log := s.log.With(slog.String("op", op),
 		slog.String("ticker", ticker))
@@ -56,7 +56,7 @@ func (s *StockMonitor) Stock(ctx context.Context, ticker string) (*stock.Stock, 
 	return stock, nil
 }
 
-func (s *StockMonitor) Set(ctx context.Context, stock *stock.Stock) error {
+func (s *StockService) Set(ctx context.Context, stock *stock.Stock) error {
 	const op = "stockMonitor.Stock"
 	log := s.log.With(slog.String("op", op),
 		slog.String("ticker", stock.Ticker))

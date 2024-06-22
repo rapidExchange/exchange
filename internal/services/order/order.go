@@ -20,25 +20,25 @@ type OrderDeleter interface {
 	Del(ctx context.Context, order *order.Order) error
 }
 
-type OrderMonitor struct {
+type OrderService struct {
 	log            *slog.Logger
 	ordersProvider OrdersProvider
 	orderSaver     OrderSaver
 	orderDeleter   OrderDeleter
 }
 
-func New(log *slog.Logger, ordersProvider OrdersProvider, orderSaver OrderSaver, orderDeleter OrderDeleter) *OrderMonitor {
-	return &OrderMonitor{log: log,
+func New(log *slog.Logger, ordersProvider OrdersProvider, orderSaver OrderSaver, orderDeleter OrderDeleter) *OrderService {
+	return &OrderService{log: log,
 		ordersProvider: ordersProvider,
 		orderSaver:     orderSaver,
 		orderDeleter:   orderDeleter}
 }
 
-func (o *OrderMonitor) Del(ctx context.Context, order *order.Order) error {
+func (o *OrderService) Del(ctx context.Context, order *order.Order) error {
 	const op = "orderMonitor.Del"
 
 	log := o.log.With(slog.String("op", op), slog.String("uuid", fmt.Sprintf("%s\t %s\t %s\t %f", order.Email,
-	order.Ticker, order.OrderUUID, order.Quantity)))
+		order.Ticker, order.OrderUUID, order.Quantity)))
 
 	err := o.orderDeleter.Del(ctx, order)
 	if err != nil {
@@ -48,7 +48,7 @@ func (o *OrderMonitor) Del(ctx context.Context, order *order.Order) error {
 	return nil
 }
 
-func (o *OrderMonitor) All(ctx context.Context, s *stock.Stock) ([]*order.Order, error) {
+func (o *OrderService) All(ctx context.Context, s *stock.Stock) ([]*order.Order, error) {
 	const op = "orderMonitor.GetAll"
 
 	log := o.log.With(slog.String("op", op))
