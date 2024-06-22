@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"rapidEx/internal/domain/order"
 	redisconnect "rapidEx/internal/redis"
@@ -24,12 +23,12 @@ func NewOrder(c *fiber.Ctx) error {
 	const op = "controllers.NewOrder"
 	newOrderRequest := new(NewOrderRequest)
 	if err := c.BodyParser(&newOrderRequest); err != nil {
-		log.Println(fmt.Errorf("%s: %w", op, err))
+		log.Printf("%s: %w\n", op, err)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 	order, err := order.New(newOrderRequest.Ticker, newOrderRequest.Email, newOrderRequest.Type, newOrderRequest.Quantity, newOrderRequest.Price)
 	if err != nil {
-		log.Println(fmt.Errorf("%s: %w", op, err))
+		log.Printf("%s: %w\n", op, err)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 	redisClient := redisconnect.MustConnect()
@@ -37,7 +36,7 @@ func NewOrder(c *fiber.Ctx) error {
 	order.Status = "processing"
 	err = orderRepository.Set(context.Background(), order)
 	if err != nil {
-		log.Println(fmt.Errorf("%s: %w", op, err))
+		log.Printf("%s: %w\n", op, err)
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	return c.SendStatus(fiber.StatusOK)

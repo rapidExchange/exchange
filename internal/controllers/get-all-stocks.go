@@ -20,7 +20,7 @@ func GetAllStocks(c *websocket.Conn) {
 	defer func() {
 		err := c.Close()
 		if err != nil {
-			log.Println(fmt.Errorf("%s: %w", op, err))
+			log.Printf("%s: %w\n", op, err)
 		}
 		log.Printf("WS conneciton closed")
 	}()

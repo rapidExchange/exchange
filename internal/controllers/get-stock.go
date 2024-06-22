@@ -29,9 +29,9 @@ func GetStock(c *websocket.Conn) {
 	defer func() {
 		err := c.Close()
 		if err != nil {
-			log.Println(fmt.Errorf("%s: %w", op, err))
+			log.Printf("%s: %w\n", op, err)
 		}
-		log.Printf("WS conneciton closed")
+		log.Println("WS conneciton closed")
 	}()
 	ticker := strings.ReplaceAll(c.Params("ticker"), "_", "/")
 
@@ -41,7 +41,7 @@ func GetStock(c *websocket.Conn) {
 	}
 	storage := tickerstorage.GetInstanse()
 	if !storage.Find(ticker) {
-		log.Printf("Undefined ticker: %s", ticker)
+		log.Printf("Undefined ticker: %s\n", ticker)
 		return
 	}
 

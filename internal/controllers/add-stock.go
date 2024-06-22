@@ -1,9 +1,7 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -34,13 +32,13 @@ func (c *Controllers)addStock(ctx *fiber.Ctx) error {
 	const op = "controllers.addStock"
 	getPriceBinanceRequest := new(getTickerPriceBinanceRequest)
 	if err := ctx.BodyParser(&getPriceBinanceRequest); err != nil {
-		log.Println(fmt.Errorf("%s: %w", op, err))
+		log.Printf("%s: %w\n", op, err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
 	symbol := strings.ToUpper(getPriceBinanceRequest.FirstSymbol + getPriceBinanceRequest.SecondSymbol)
 	price, err := getBinancePrice(symbol)
 	if err != nil {
-		log.Println(fmt.Errorf("%s: %w", op, err))
+		log.Printf("%s: %w\n", op, err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 	precision := getPrecision(price)
@@ -48,11 +46,11 @@ func (c *Controllers)addStock(ctx *fiber.Ctx) error {
 	ticker := strings.ToLower(getPriceBinanceRequest.FirstSymbol + "/" + getPriceBinanceRequest.SecondSymbol)
 	err = setStock(ticker, roundedPrice)
 	if err != nil {
-		log.Println(fmt.Errorf("%s: %w", op, err))
-		return c.SendStatus(fiber.StatusInternalServerError)
+		log.Printf("%s: %w\n", op, err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 	setTickerToStorage(ticker, precision)
-	return c.SendStatus(fiber.StatusOK)
+	return ctx.SendStatus(fiber.StatusOK)
 }
 
 func getBinancePrice(symbol string) (float64, error) {
