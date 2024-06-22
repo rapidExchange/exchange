@@ -30,18 +30,18 @@ type getTickerPriceBinanceResponse struct {
 	Price  float64 `json:"price,string"`
 }
 
-func addStock(c *fiber.Ctx) error {
+func (c *Controllers)addStock(ctx *fiber.Ctx) error {
 	const op = "controllers.addStock"
 	getPriceBinanceRequest := new(getTickerPriceBinanceRequest)
-	if err := c.BodyParser(&getPriceBinanceRequest); err != nil {
+	if err := ctx.BodyParser(&getPriceBinanceRequest); err != nil {
 		log.Println(fmt.Errorf("%s: %w", op, err))
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
 	symbol := strings.ToUpper(getPriceBinanceRequest.FirstSymbol + getPriceBinanceRequest.SecondSymbol)
 	price, err := getBinancePrice(symbol)
 	if err != nil {
 		log.Println(fmt.Errorf("%s: %w", op, err))
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 	precision := getPrecision(price)
 	roundedPrice := utils.Round(price, precision)
