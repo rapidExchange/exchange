@@ -1,21 +1,16 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
 	"rapidEx/internal/domain/stock"
-	redisconnect "rapidEx/internal/redis"
-	stockrepository "rapidEx/internal/repositories/stock-repository"
-	stockPriceProcessor "rapidEx/internal/stock-price-processor"
-	tickerstorage "rapidEx/internal/tickerStorage"
-	"rapidEx/internal/utils"
 )
 
 type getTickerPriceBinanceRequest struct {
@@ -32,24 +27,22 @@ func (c *Controllers)addStock(ctx *fiber.Ctx) error {
 	const op = "controllers.addStock"
 	getPriceBinanceRequest := new(getTickerPriceBinanceRequest)
 	if err := ctx.BodyParser(&getPriceBinanceRequest); err != nil {
-		log.Printf("%s: %w\n", op, err)
+		log.Printf("%s: %v\n", op, err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
 	symbol := strings.ToUpper(getPriceBinanceRequest.FirstSymbol + getPriceBinanceRequest.SecondSymbol)
 	price, err := getBinancePrice(symbol)
 	if err != nil {
-		log.Printf("%s: %w\n", op, err)
+		log.Printf("%s: %v\n", op, err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
-	precision := getPrecision(price)
-	roundedPrice := utils.Round(price, precision)
 	ticker := strings.ToLower(getPriceBinanceRequest.FirstSymbol + "/" + getPriceBinanceRequest.SecondSymbol)
-	err = setStock(ticker, roundedPrice)
+	//provide context
+	err = c.stockService.Set(context.Background(), stock.New(ticker, price))
 	if err != nil {
-		log.Printf("%s: %w\n", op, err)
+		log.Printf("%s: %v\n", op, err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
-	setTickerToStorage(ticker, precision)
 	return ctx.SendStatus(fiber.StatusOK)
 }
 
@@ -71,13 +64,6 @@ func getBinancePrice(symbol string) (float64, error) {
 	return binanceResponse.Price, nil
 }
 
-func setStock(ticker string, price float64) error {
-	Stock := stock.New(ticker, price)
-	redisClient := redisconnect.MustConnect()
-	stockRepository := stockrepository.NewStockRepository(redisClient)
-	err := stockRepository.Set(context.Background(), Stock)
-	return err
-}
 
 func makeBinancePriceRequest(url string) (*http.Response, error) {
 	request, err := http.NewRequest("GET", url, nil)
@@ -98,17 +84,6 @@ func unmarshalToBinanceResponse(response []byte) (*getTickerPriceBinanceResponse
 		return nil, err
 	}
 	return binanceResponse, nil
-}
-
-func getPrecision(price float64) int {
-	priceProcessor := stockPriceProcessor.New()
-	return priceProcessor.PreciseAs(strconv.FormatFloat(price, 'f', -1, 64))
-}
-
-func setTickerToStorage(ticker string, precision int) {
-	tickerStorage := tickerstorage.GetInstanse()
-	tickerStorage.TickerAppend(ticker, precision)
-	log.Println(tickerStorage.GetTickers())
 }
 
 func readBody(source io.Reader) ([]byte, error) {
