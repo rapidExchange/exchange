@@ -12,12 +12,11 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-
 type StockModify struct {
 	Ticker string            `json:"ticker"`
 	Price  float64           `json:"price"`
 	Buy    map[string]string `json:"stockBookBuy"`
-	Sell   map[string]string `json:"stockBookSell"` 
+	Sell   map[string]string `json:"stockBookSell"`
 }
 
 func NewStockMapString(s *stock.Stock) *StockModify {
@@ -44,6 +43,7 @@ func UnmarshalBinary(data []byte) (*StockModify, error) {
 type Repository interface {
 	Set(ctx context.Context, stock *stock.Stock) error
 	Stock(ctx context.Context, ticker string) (*stock.Stock, error)
+	Stocks(ctx context.Context) ([]*stock.Stock, error)
 	Del(ctx context.Context, ticker string) error
 }
 
@@ -96,6 +96,10 @@ func (r *rsClient) Stock(ctx context.Context, ticker string) (*stock.Stock, erro
 	s.Stockbook.Buy = mBuy
 	s.Stockbook.Sell = mSell
 	return &s, nil
+}
+
+func (r *rsClient) Stocks(ctx context.Context) ([]*stock.Stock, error) {
+	panic("implement me !")
 }
 
 func (r *rsClient) Del(ctx context.Context, ticker string) error {

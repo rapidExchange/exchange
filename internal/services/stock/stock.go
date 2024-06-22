@@ -15,6 +15,7 @@ var (
 
 type StockProvider interface {
 	Stock(ctx context.Context, ticker string) (*stock.Stock, error)
+	Stocks(ctx context.Context) ([]*stock.Stock, error) //returns all existing stock from storage
 }
 
 type StockSaver interface {
@@ -54,6 +55,10 @@ func (s *StockService) Stock(ctx context.Context, ticker string) (*stock.Stock, 
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return stock, nil
+}
+
+func (s *StockService) Stocks(ctx context.Context) ([]*stock.Stock, error) {
+	panic("implement me !")
 }
 
 func (s *StockService) Set(ctx context.Context, stock *stock.Stock) error {
