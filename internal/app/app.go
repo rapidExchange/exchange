@@ -21,7 +21,6 @@ import (
 type app struct {
 	c                   config.Config
 	ctx                 context.Context
-	gen                 Generator
 	dealsProcessor      DealsProcessor
 	stockPriceProcessor StockPriceProcessor
 }
@@ -43,15 +42,14 @@ type StockProvider interface {
 	Stock(ctx context.Context, ticker string) (*stockDomain.Stock, error)
 }
 
-func New(gen Generator,
-	dealsDealsProcessor DealsProcessor,
+func New(dealsDealsProcessor DealsProcessor,
 	stockPriceProcessor StockPriceProcessor) (*app, error) {
 	pwd, _ := os.Getwd()
 	c, err := config.LoadConfig(pwd)
 	if err != nil {
 		return nil, err
 	}
-	return &app{c: c, gen: gen, dealsProcessor: dealsDealsProcessor,
+	return &app{c: c, dealsProcessor: dealsDealsProcessor,
 		stockPriceProcessor: stockPriceProcessor}, nil
 
 }
@@ -79,7 +77,6 @@ func (a *app) Do() {
 }
 
 func (a *app) handleStock(stock *stockDomain.Stock, stockProvider StockProvider) {
-	a.gen.GenerateALot(stock, 10)
 	a.dealsProcessor.Do(stock)
 	a.stockPriceProcessor.UpdatePrice(stock)
 	if err := stockProvider.Set(context.Background(), stock); err != nil {

@@ -8,7 +8,6 @@ import (
 
 	"rapidEx/internal/app"
 	dealsMachine "rapidEx/internal/deals-machine"
-	"rapidEx/internal/generator"
 	redisconnect "rapidEx/internal/redis"
 	orderrepository "rapidEx/internal/repositories/order-repository"
 	stockrepository "rapidEx/internal/repositories/stock-repository"
@@ -18,7 +17,6 @@ import (
 )
 
 func main() {
-	gen := generator.New()
 	rc := redisconnect.MustConnect()
 	orderRepository := orderrepository.NewOrderRepository(rc)
 	orderMonitor := order.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), orderRepository, orderRepository, orderRepository)
@@ -26,7 +24,7 @@ func main() {
 	stockMonitor := stock.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), stockrepository, stockrepository, nil)
 	dealsMachine := dealsMachine.New(context.Background(), orderMonitor, stockMonitor)
 	stockPriceProcessor := stockPriceProcessor.New()
-	app, err := app.New(gen, dealsMachine, stockPriceProcessor)
+	app, err := app.New(dealsMachine, stockPriceProcessor)
 	if err != nil {
 		log.Fatal(err)
 	}
