@@ -7,7 +7,6 @@ import (
 	stockBook "rapidEx/internal/domain/stock-book"
 	tickerstorage "rapidEx/internal/tickerStorage"
 	"rapidEx/internal/utils"
-	"strings"
 )
 
 type stockPriceProcessor struct {
@@ -45,11 +44,6 @@ func (proc *stockPriceProcessor) MeanWeight(stockBook stockBook.StockBook) (floa
 		err = errors.New("empty stock book")
 	}
 	return meanw, err
-}
-
-func (proc *stockPriceProcessor) PreciseAs(s string) int {
-	st := strings.TrimRight(strings.Split(s, ".")[0], "0")
-	return len(st)
 }
 
 func (proc *stockPriceProcessor) UpdatePrice(stock *stock.Stock) error {
