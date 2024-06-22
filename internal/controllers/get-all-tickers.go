@@ -24,7 +24,7 @@ func GetAllTickers(c *fiber.Ctx) error {
 	tickersResponse := &AllTickersResponse{Tickers: tickers}
 	bytes, err := json.Marshal(tickersResponse)
 	if err != nil {
-		log.Printf("%s: %w\n", op, err)
+		log.Printf("%s: %v\n", op, err)
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	return c.Send(bytes)
