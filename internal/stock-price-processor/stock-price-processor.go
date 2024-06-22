@@ -2,11 +2,8 @@ package stockPriceProcessor
 
 import (
 	"errors"
-	"log"
 	"rapidEx/internal/domain/stock"
 	stockBook "rapidEx/internal/domain/stock-book"
-	tickerstorage "rapidEx/internal/tickerStorage"
-	"rapidEx/internal/utils"
 )
 
 type stockPriceProcessor struct {
@@ -51,12 +48,6 @@ func (proc *stockPriceProcessor) UpdatePrice(stock *stock.Stock) error {
 	if err != nil {
 		return err
 	}
-	tickerStorage := tickerstorage.GetInstanse()
-	prec, ok := tickerStorage.Get(stock.Ticker)
-	if !ok {
-		log.Println("Undefined ticker in tickerstorage: ", stock.Ticker)
-	}
-	stock.Price = utils.Round(price, prec)
-
+	stock.Price = price
 	return nil
 }
