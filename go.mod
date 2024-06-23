@@ -4,9 +4,9 @@ go 1.20
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/gofiber/fiber/v2 v2.50.0
+	github.com/gofiber/fiber/v2 v2.52.1
 	github.com/golang-migrate/migrate/v4 v4.17.0
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/redis/go-redis/v9 v9.2.1
 	github.com/spf13/viper v1.17.0
 	golang.org/x/crypto v0.21.0
@@ -50,7 +50,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.50.0 // indirect
+	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
