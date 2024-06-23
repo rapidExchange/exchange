@@ -60,3 +60,7 @@ func (o *OrderService) All(ctx context.Context, s *stock.Stock) ([]*order.Order,
 	}
 	return orders, nil
 }
+
+func (o *OrderService) Set(ctx context.Context, order *order.Order) error {
+	panic("implement me!")
+}
