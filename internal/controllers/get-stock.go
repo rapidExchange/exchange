@@ -2,14 +2,8 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"log/slog"
-	"os"
-	redisconnect "rapidEx/internal/redis"
-	stockrepository "rapidEx/internal/repositories/stock-repository"
-	"rapidEx/internal/services/stock"
-	tickerstorage "rapidEx/internal/tickerStorage"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,47 +18,37 @@ type getStockWS struct {
 	Precision int               `json:"precision"`
 }
 
-func GetStock(c *websocket.Conn) {
+// TODO: remove magic sleep timeout
+func (c *Controllers) GetStock(ws *websocket.Conn) {
 	const op = "controllers.GetStock"
 	defer func() {
-		err := c.Close()
+		err := ws.Close()
 		if err != nil {
 			log.Printf("%s: %v\n", op, err)
 		}
 		log.Println("WS conneciton closed")
 	}()
-	ticker := strings.ReplaceAll(c.Params("ticker"), "_", "/")
-
-	if !validateStock(ticker) {
-		log.Println("Empty stockname")
-		return
-	}
-	storage := tickerstorage.GetInstanse()
-	if !storage.Find(ticker) {
-		log.Printf("Undefined ticker: %s\n", ticker)
-		return
-	}
-
-	prec, _ := storage.Get(ticker)
-
-	redisConneciton := redisconnect.MustConnect()
-	stockRepository := stockrepository.NewStockRepository(redisConneciton)
-	stockMonitor := stock.New(slog.New(slog.NewTextHandler(os.Stdout, nil)), stockRepository,
-		stockRepository, nil)
+	ticker := strings.ReplaceAll(ws.Params("ticker"), "_", "/")
 	for {
-		s, err := stockMonitor.Stock(context.Background(), ticker)
+		stock, err := c.stockService.Stock(context.Background(), ticker)
 		if err != nil {
-			log.Println(fmt.Errorf("%s: %w", op, err))
-			continue
+			log.Printf("%s: %v\n", op, err)
+			ws.Close()
 		}
-		stockModify := stockrepository.NewStockMapString(s)
-		c.WriteJSON(getStockWS{Ticker: stockModify.Ticker,
-			Price: stockModify.Price, Buy: stockModify.Buy,
-			Sell: stockModify.Sell, Precision: prec})
+		ws.WriteJSON(getStockWS{Ticker: stock.Ticker,
+			Price: stock.Price, Buy: mapFloatToString(stock.Stockbook.Buy),
+			Sell: mapFloatToString(stock.Stockbook.Sell)})
 		time.Sleep(time.Second)
 	}
 }
 
-func validateStock(stock string) bool {
-	return stock != ""
+func mapFloatToString(m map[float64]float64) map[string]string {
+	stringMap := make(map[string]string)
+
+	for k, v := range m {
+		stringKey := strconv.FormatFloat(k, 'f', -1, 64)
+		stringValue := strconv.FormatFloat(v, 'f', -1, 64)
+		stringMap[stringKey] = stringValue
+	}
+	return stringMap
 }

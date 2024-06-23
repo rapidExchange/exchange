@@ -4,8 +4,6 @@ import (
 	"context"
 	"log"
 	"rapidEx/internal/domain/order"
-	redisconnect "rapidEx/internal/redis"
-	orderrepository "rapidEx/internal/repositories/order-repository"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,25 +17,23 @@ type NewOrderRequest struct {
 }
 
 // TODO: check user balance
-func NewOrder(c *fiber.Ctx) error {
+func (c *Controllers) NewOrder(ctx *fiber.Ctx) error {
 	const op = "controllers.NewOrder"
 	newOrderRequest := new(NewOrderRequest)
-	if err := c.BodyParser(&newOrderRequest); err != nil {
+	if err := ctx.BodyParser(&newOrderRequest); err != nil {
 		log.Printf("%s: %v\n", op, err)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
 	order, err := order.New(newOrderRequest.Ticker, newOrderRequest.Email, newOrderRequest.Type, newOrderRequest.Quantity, newOrderRequest.Price)
 	if err != nil {
 		log.Printf("%s: %v\n", op, err)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
-	redisClient := redisconnect.MustConnect()
-	orderRepository := orderrepository.NewOrderRepository(redisClient)
 	order.Status = "processing"
-	err = orderRepository.Set(context.Background(), order)
+	err = c.orderService.Set(context.Background(), order)
 	if err != nil {
 		log.Printf("%s: %v\n", op, err)
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
-	return c.SendStatus(fiber.StatusOK)
+	return ctx.SendStatus(fiber.StatusOK)
 }

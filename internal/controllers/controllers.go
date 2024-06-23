@@ -1,20 +1,30 @@
 package controllers
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"context"
+	"rapidEx/internal/services/auth"
+	"rapidEx/internal/services/order"
+	"rapidEx/internal/services/stock"
+
 	"github.com/gofiber/contrib/websocket"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-//TODO: normal error handling
+type Controllers struct {
+	ctx          context.Context
+	authService  auth.AuthService
+	orderService order.OrderService
+	stockService stock.StockService
+}
 
-func RegisterRoutes(app *fiber.App) {
-	app.Use(cors.New(cors.Config{AllowOrigins: "*", AllowHeaders: "Origin, Content-Type, Accept"},))
-	app.Post("/register", register)
-	app.Post("/login", login)
-	app.Get("/all-tickers", GetAllTickers)
-	app.Post("/add-stock", addStock)
-	app.Get("/ws/get-all-stocks", websocket.New(GetAllStocks))
-	app.Get("/ws/:ticker", websocket.New(GetStock))
-	app.Post("/order", NewOrder)
+// TODO: normal error handling
+func (c *Controllers) RegisterRoutes(app *fiber.App) {
+	app.Use(cors.New(cors.Config{AllowOrigins: "*", AllowHeaders: "Origin, Content-Type, Accept"}))
+	app.Post("/register", c.register)
+	app.Post("/login", c.login)
+	app.Post("/stock", c.addStock)
+	app.Get("/ws/stocks", websocket.New(c.GetAllStocks))
+	app.Get("/ws/:ticker", websocket.New(c.GetStock))
+	app.Post("/order", c.NewOrder)
 }
