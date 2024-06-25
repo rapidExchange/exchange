@@ -2,7 +2,6 @@ package dealsprocessor
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"rapidEx/internal/domain/order"
 	"rapidEx/internal/domain/stock"
@@ -37,11 +36,11 @@ func (d *dealsMachine) Do(s *stock.Stock) {
 			ok := processOrder(order, s)
 			if ok {
 				log.Printf("order %s from user %s was successfully done", order.OrderUUID.String(), order.Email)
-				if err != nil {
-					panic(fmt.Sprint("deals-processor: ", err))
-				}
 				order.Status = "completed"
-				d.ordersStorage.Del(context.Background(), order)
+				err := d.ordersStorage.Del(context.Background(), order)
+				if err != nil {
+					log.Println(err)
+				}
 			}
 		}
 
